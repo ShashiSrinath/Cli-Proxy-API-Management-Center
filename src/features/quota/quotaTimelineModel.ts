@@ -307,6 +307,15 @@ interface AntigravityBucketLike {
   periodHours?: number | null;
 }
 
+/** OpenCode Go window lengths are fixed by its plan: 5h rolling, weekly, monthly. */
+const OPENCODE_GO_PERIOD_HOURS: Record<string, number> = { rolling: 5, weekly: 168, monthly: 720 };
+
+interface OpencodeGoWindowLike {
+  id: string;
+  usedPercent: number | null;
+  resetAt?: number;
+}
+
 interface MetaWindowLike {
   id: 'window' | 'weekly';
   usedPercent: number | null;
@@ -562,6 +571,43 @@ export function buildTimelineLane(input: TimelineLaneInput): TimelineLane {
       limits: windows
         .map((window) => ({
           label: `meta_quota.${window.id}`,
+          remaining: remainingOf(window),
+        }))
+        .filter((limit): limit is TimelineLimit => limit.remaining !== null),
+    };
+  }
+
+  if (provider === 'opencode-go') {
+    const sourceWindows =
+      (quota as { data?: { windows?: OpencodeGoWindowLike[] } }).data?.windows ?? [];
+    const windows = sourceWindows
+      .filter(
+        (window) =>
+          typeof window.resetAt === 'number' &&
+          Number.isFinite(window.resetAt) &&
+          OPENCODE_GO_PERIOD_HOURS[window.id] !== undefined
+      )
+      .map((window) => ({
+        ...window,
+        resetAtMs: (window.resetAt as number) * 1000,
+        periodHours: OPENCODE_GO_PERIOD_HOURS[window.id],
+      }));
+    const chosen = pickLaneWindow(windows, maxPeriodHours);
+    if (!chosen) return empty;
+
+    const remainingOf = (window: OpencodeGoWindowLike) =>
+      typeof window.usedPercent === 'number' && Number.isFinite(window.usedPercent)
+        ? clampPercent(100 - window.usedPercent)
+        : null;
+
+    return {
+      ...empty,
+      anchorMs: chosen.resetAtMs,
+      periodHours: chosen.periodHours,
+      remaining: remainingOf(chosen),
+      limits: windows
+        .map((window) => ({
+          label: `opencode_go_quota.${window.id}`,
           remaining: remainingOf(window),
         }))
         .filter((limit): limit is TimelineLimit => limit.remaining !== null),

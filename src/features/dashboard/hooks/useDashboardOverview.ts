@@ -10,6 +10,7 @@ import {
 } from '@/utils/recentRequests';
 import type { Config } from '@/types';
 import type { AuthFileItem } from '@/types/authFile';
+import { withoutConfigSourcedAuthFiles } from '@/features/authFiles/constants';
 import {
   TRAFFIC_BUCKET_MINUTES,
   type CredentialHealth,
@@ -133,7 +134,7 @@ export function useDashboardOverview() {
     if (!connected) return;
     try {
       const response = await authFilesApi.list();
-      setAuthFiles(response.files);
+      setAuthFiles(withoutConfigSourcedAuthFiles(response.files));
     } catch {
       setAuthFiles(null);
     }

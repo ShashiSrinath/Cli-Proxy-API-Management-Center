@@ -300,6 +300,27 @@ export interface MetaQuotaState {
   errorStatus?: number;
 }
 
+/** One spend window from OpenCode Go's usage endpoint (rolling = 5h). */
+export interface OpencodeGoQuotaWindow {
+  id: 'rolling' | 'weekly' | 'monthly';
+  usedPercent: number | null;
+  /** Reset instant as Unix seconds. */
+  resetAt?: number;
+  /** Upstream window status, e.g. "ok". */
+  status?: string;
+}
+
+export interface OpencodeGoQuotaData {
+  windows: OpencodeGoQuotaWindow[];
+}
+
+export interface OpencodeGoQuotaState {
+  status: 'idle' | 'loading' | 'success' | 'error';
+  data?: OpencodeGoQuotaData;
+  error?: string;
+  errorStatus?: number;
+}
+
 // Kimi API payload types
 export interface KimiUsageDetail {
   used?: number | string;

@@ -40,6 +40,7 @@ import {
   useThemeStore,
 } from '@/stores';
 import { AUTH_FILES_CHANGED_EVENT } from '@/features/authFiles/authFilesEvents';
+import { withoutConfigSourcedAuthFiles } from '@/features/authFiles/constants';
 import {
   collectPluginResourceEntries,
   PLUGIN_RESOURCES_REFRESH_EVENT,
@@ -508,7 +509,9 @@ export function MainLayout() {
     try {
       const response = await authFilesApi.list();
       if (requestID !== authFilesCountRequestRef.current) return;
-      setAuthFilesCount(Array.isArray(response?.files) ? response.files.length : null);
+      setAuthFilesCount(
+        Array.isArray(response?.files) ? withoutConfigSourcedAuthFiles(response.files).length : null
+      );
     } catch {
       if (requestID !== authFilesCountRequestRef.current) return;
       setAuthFilesCount(null);

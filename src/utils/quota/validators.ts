@@ -37,6 +37,22 @@ export function isXaiFile(file: AuthFileItem): boolean {
   return resolveAuthProvider(file) === 'xai';
 }
 
+/**
+ * OpenCode Go keys are config-defined OpenAI-compatible entries whose provider key
+ * follows the user's entry name, so detect them by the backend quota probe URL.
+ */
+export function isOpencodeGoFile(file: AuthFileItem): boolean {
+  const probe = (file as { quota_probe?: unknown }).quota_probe;
+  const url =
+    probe && typeof probe === 'object' && typeof (probe as { url?: unknown }).url === 'string'
+      ? (probe as { url: string }).url.toLowerCase()
+      : '';
+  return (
+    url.includes('opencode.ai/zen/go') ||
+    resolveAuthProvider(file) === 'openai-compatible-opencode-go'
+  );
+}
+
 export function isDisabledAuthFile(file: AuthFileItem): boolean {
   const raw = (file as { disabled?: unknown }).disabled;
   if (typeof raw === 'boolean') return raw;

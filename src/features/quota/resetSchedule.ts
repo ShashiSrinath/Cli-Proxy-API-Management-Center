@@ -129,13 +129,14 @@ export function collectQuotaRowInstants(
     return collectRows((quota as { rows?: WindowLike[] }).rows ?? [], 'row');
   }
 
-  if (provider === 'meta') {
+  // OpenCode Go stores its windows in the same shape as Meta.
+  if (provider === 'meta' || provider === 'opencode-go') {
     const windows =
       (
         quota as {
           data?: {
             windows?: {
-              id: 'window' | 'weekly';
+              id: string;
               usedPercent: number | null;
               resetAt?: number;
             }[];

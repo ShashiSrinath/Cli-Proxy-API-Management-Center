@@ -15,6 +15,7 @@ import {
   isRuntimeOnlyAuthFile,
   normalizeProviderKey,
   supportsAuthFileManualRefresh,
+  withoutConfigSourcedAuthFiles,
 } from '@/features/authFiles/constants';
 
 type DeleteAllOptions = {
@@ -224,7 +225,7 @@ export function useAuthFilesData(options?: UseAuthFilesDataOptions): UseAuthFile
       try {
         const data = await authFilesApi.list();
         if (!isCurrentRequest()) return; // 已被更新的请求/连接/变更取代
-        setFiles(data?.files || []);
+        setFiles(withoutConfigSourcedAuthFiles(data?.files || []));
         setError('');
       } catch (err: unknown) {
         if (!isCurrentRequest()) return;

@@ -1,6 +1,6 @@
 import type { AuthFileItem } from '@/types';
 import { normalizeRecentRequestAuthIndex } from '@/utils/recentRequests';
-import { isDevinFile } from './validators';
+import { isDevinFile, isOpencodeGoFile } from './validators';
 
 const QUOTA_IDENTITY_SEPARATOR = '\0';
 
@@ -17,6 +17,12 @@ export function getQuotaCacheKey(file: AuthFileItem): string {
 
 /** Disambiguate same-name Devin cards without ever falling back to account (a secret). */
 export function getQuotaDisplayName(file: AuthFileItem): string {
+  if (isOpencodeGoFile(file)) {
+    // Config credentials have an ID-style name; show the config entry label instead.
+    const label = typeof file.label === 'string' ? file.label.trim() : '';
+    const authIndex = normalizeRecentRequestAuthIndex(file.authIndex);
+    return [label || file.name, authIndex].filter(Boolean).join(' · ');
+  }
   if (!isDevinFile(file)) return file.name;
   const identity = file.email?.trim() || normalizeRecentRequestAuthIndex(file.authIndex);
   return identity ? `${file.name} · ${identity}` : file.name;

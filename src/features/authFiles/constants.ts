@@ -239,6 +239,18 @@ export const applyAuthFileUsingApi = (
   usingApi: boolean
 ): Record<string, unknown> => ({ ...value, using_api: usingApi });
 
+/**
+ * Config-defined API keys (e.g. OpenCode Go) are listed by the backend only for the
+ * quota page. They are not files, so file views and counts must skip them.
+ */
+export function isConfigSourcedAuthFile(file: AuthFileItem): boolean {
+  const raw = file['source'];
+  return typeof raw === 'string' && raw.trim().toLowerCase() === 'config';
+}
+
+export const withoutConfigSourcedAuthFiles = (files: AuthFileItem[]): AuthFileItem[] =>
+  files.filter((file) => !isConfigSourcedAuthFile(file));
+
 export function isRuntimeOnlyAuthFile(file: AuthFileItem): boolean {
   const raw = file['runtime_only'] ?? file.runtimeOnly;
   if (typeof raw === 'boolean') return raw;
