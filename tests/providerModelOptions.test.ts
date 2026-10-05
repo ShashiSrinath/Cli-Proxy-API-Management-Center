@@ -21,14 +21,20 @@ const draft = (model: ModelAlias): ModelEntryInput => ({
  * Many assertions below match on i18n keys rather than rendered text, so pin
  * i18next's special `cimode`, which always returns the key. Without this the
  * result depends on whether another test file has already initialized i18n in
- * the default render language.
+ * the default render language. The previous language is restored afterwards so
+ * this file never changes the global language other files observe.
  */
+let previousLanguage: string | undefined;
+
 beforeAll(async () => {
+  previousLanguage = i18n.language;
   await i18n.changeLanguage('cimode');
 });
 
 afterAll(async () => {
-  await i18n.changeLanguage('en');
+  if (previousLanguage) {
+    await i18n.changeLanguage(previousLanguage);
+  }
 });
 
 describe('provider model options', () => {
