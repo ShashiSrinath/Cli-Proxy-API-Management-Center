@@ -129,8 +129,8 @@ export function collectQuotaRowInstants(
     return collectRows((quota as { rows?: WindowLike[] }).rows ?? [], 'row');
   }
 
-  // OpenCode Go stores its windows in the same shape as Meta.
-  if (provider === 'meta' || provider === 'opencode-go') {
+  // OpenCode Go stores its windows in the same shape as Meta; Command Code too.
+  if (provider === 'meta' || provider === 'opencode-go' || provider === 'commandcode') {
     const windows =
       (
         quota as {

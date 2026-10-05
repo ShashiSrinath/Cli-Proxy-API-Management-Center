@@ -11,6 +11,7 @@ export * from './oauth';
 export * from './logs';
 export * from './version';
 export * from './models';
+export * from './commandCodeQuota';
 export * from './metaQuota';
 export * from './opencodeGoQuota';
 export * from './plugins';

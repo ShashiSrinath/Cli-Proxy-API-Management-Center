@@ -321,6 +321,27 @@ export interface OpencodeGoQuotaState {
   errorStatus?: number;
 }
 
+/** One spend window from Command Code's billing credits endpoint (fiveHour = 5h). */
+export interface CommandCodeQuotaWindow {
+  id: 'fiveHour' | 'weekly';
+  usedPercent: number | null;
+  /** Reset instant as Unix seconds. */
+  resetAt?: number;
+}
+
+export interface CommandCodeQuotaData {
+  windows: CommandCodeQuotaWindow[];
+  /** Monthly + purchased + free credits remaining, in USD. */
+  creditsRemaining?: number;
+}
+
+export interface CommandCodeQuotaState {
+  status: 'idle' | 'loading' | 'success' | 'error';
+  data?: CommandCodeQuotaData;
+  error?: string;
+  errorStatus?: number;
+}
+
 // Kimi API payload types
 export interface KimiUsageDetail {
   used?: number | string;

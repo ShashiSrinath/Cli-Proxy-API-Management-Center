@@ -62,6 +62,10 @@ export const TYPE_COLORS: Record<string, TypeColorSet> = {
     light: { bg: '#e8f5e9', text: '#2e7d32' },
     dark: { bg: '#1b5e20', text: '#a5d6a7' },
   },
+  commandcode: {
+    light: { bg: '#fff3e0', text: '#e65100' },
+    dark: { bg: '#7a2f00', text: '#ffcc80' },
+  },
   unknown: {
     light: { bg: '#f0f0f0', text: '#666666', border: '1px dashed #999999' },
     dark: { bg: '#3a3a3a', text: '#aaaaaa', border: '1px dashed #666666' },

@@ -316,6 +316,15 @@ interface OpencodeGoWindowLike {
   resetAt?: number;
 }
 
+/** Command Code window lengths are fixed by its plan: 5h and weekly. */
+const COMMAND_CODE_PERIOD_HOURS: Record<string, number> = { fiveHour: 5, weekly: 168 };
+
+interface CommandCodeWindowLike {
+  id: string;
+  usedPercent: number | null;
+  resetAt?: number;
+}
+
 interface MetaWindowLike {
   id: 'window' | 'weekly';
   usedPercent: number | null;
@@ -608,6 +617,43 @@ export function buildTimelineLane(input: TimelineLaneInput): TimelineLane {
       limits: windows
         .map((window) => ({
           label: `opencode_go_quota.${window.id}`,
+          remaining: remainingOf(window),
+        }))
+        .filter((limit): limit is TimelineLimit => limit.remaining !== null),
+    };
+  }
+
+  if (provider === 'commandcode') {
+    const sourceWindows =
+      (quota as { data?: { windows?: CommandCodeWindowLike[] } }).data?.windows ?? [];
+    const windows = sourceWindows
+      .filter(
+        (window) =>
+          typeof window.resetAt === 'number' &&
+          Number.isFinite(window.resetAt) &&
+          COMMAND_CODE_PERIOD_HOURS[window.id] !== undefined
+      )
+      .map((window) => ({
+        ...window,
+        resetAtMs: (window.resetAt as number) * 1000,
+        periodHours: COMMAND_CODE_PERIOD_HOURS[window.id],
+      }));
+    const chosen = pickLaneWindow(windows, maxPeriodHours);
+    if (!chosen) return empty;
+
+    const remainingOf = (window: CommandCodeWindowLike) =>
+      typeof window.usedPercent === 'number' && Number.isFinite(window.usedPercent)
+        ? clampPercent(100 - window.usedPercent)
+        : null;
+
+    return {
+      ...empty,
+      anchorMs: chosen.resetAtMs,
+      periodHours: chosen.periodHours,
+      remaining: remainingOf(chosen),
+      limits: windows
+        .map((window) => ({
+          label: `commandcode_quota.${window.id}`,
           remaining: remainingOf(window),
         }))
         .filter((limit): limit is TimelineLimit => limit.remaining !== null),

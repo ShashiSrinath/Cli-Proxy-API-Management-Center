@@ -73,6 +73,7 @@ describe('buildTabCounts', () => {
       devin: 0,
       meta: 0,
       'opencode-go': 0,
+      commandcode: 0,
     });
   });
 });

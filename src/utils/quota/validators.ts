@@ -53,6 +53,22 @@ export function isOpencodeGoFile(file: AuthFileItem): boolean {
   );
 }
 
+/**
+ * Command Code keys are the same kind of config-defined OpenAI-compatible entry
+ * as OpenCode Go, so detect them by the backend quota probe URL or provider key.
+ */
+export function isCommandCodeFile(file: AuthFileItem): boolean {
+  const probe = (file as { quota_probe?: unknown }).quota_probe;
+  const url =
+    probe && typeof probe === 'object' && typeof (probe as { url?: unknown }).url === 'string'
+      ? (probe as { url: string }).url.toLowerCase()
+      : '';
+  return (
+    url.includes('api.commandcode.ai') ||
+    resolveAuthProvider(file) === 'openai-compatible-commandcode'
+  );
+}
+
 export function isDisabledAuthFile(file: AuthFileItem): boolean {
   const raw = (file as { disabled?: unknown }).disabled;
   if (typeof raw === 'boolean') return raw;
