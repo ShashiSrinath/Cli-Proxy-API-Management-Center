@@ -1469,6 +1469,12 @@
         "input_hint": "Changes take effect after saving the configuration. Upstream provider keys are managed separately.",
         "error_empty": "Please enter an API key",
         "error_invalid": "API key contains invalid characters",
+        "providers_label": "Allowed providers",
+        "providers_hint": "Leave all unchecked to allow every provider. When set, requests for models served only by other providers are rejected and model lists only show allowed models. Saved to access.api-key-providers.",
+        "providers_all": "All providers",
+        "providers_summary": "Providers: {{providers}}",
+        "providers_custom_placeholder": "Other provider id (for example a plugin id)",
+        "providers_custom_add": "Add provider",
         "strength": {
           "label": "API key strength",
           "empty": "Not entered",

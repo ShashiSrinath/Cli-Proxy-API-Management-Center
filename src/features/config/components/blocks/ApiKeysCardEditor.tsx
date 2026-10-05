@@ -2,8 +2,14 @@ import { memo, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
-import { useAuthStore, useNotificationStore } from '@/stores';
+import { SelectionCheckbox } from '@/components/ui/SelectionCheckbox';
+import { useAuthStore, useConfigStore, useNotificationStore } from '@/stores';
 import { apiKeyNameFingerprint, readApiKeyNames, saveApiKeyName } from '../../apiKeyNames';
+import {
+  buildApiKeyProviderOptions,
+  normalizeApiKeyProviderId,
+  remapApiKeyProviders,
+} from '../../apiKeyProviders';
 import { copyToClipboard } from '@/utils/clipboard';
 import { makeClientId } from '@/types/visualConfig';
 import { generateSecureApiKey } from '@/utils/apiKey';
@@ -14,8 +20,10 @@ import styles from './Blocks.module.scss';
 
 interface ApiKeysCardEditorProps {
   value: string;
+  /** Provider allow-lists keyed by API key; keys without an entry may use every provider. */
+  providers: Record<string, string[]>;
   disabled?: boolean;
-  onChange: (nextValue: string) => void;
+  onChange: (nextValue: string, nextProviders: Record<string, string[]>) => void;
 }
 
 export const ApiKeysCardEditor = memo(function ApiKeysCardEditor(props: ApiKeysCardEditorProps) {
@@ -25,6 +33,7 @@ export const ApiKeysCardEditor = memo(function ApiKeysCardEditor(props: ApiKeysC
 
 function ScopedApiKeysCardEditor({
   value,
+  providers,
   disabled,
   onChange,
   apiBase,
@@ -64,8 +73,23 @@ function ScopedApiKeysCardEditor({
   const [editingApiKeyId, setEditingApiKeyId] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [formError, setFormError] = useState('');
+  const [providerSelection, setProviderSelection] = useState<string[]>([]);
+  const [customProvider, setCustomProvider] = useState('');
+  const providersLabelId = useId();
+  const providersHintId = `${providersLabelId}-hint`;
+  const openaiCompatibility = useConfigStore((state) => state.config?.openaiCompatibility);
+  const providerOptions = useMemo(
+    () =>
+      buildApiKeyProviderOptions(
+        (openaiCompatibility ?? []).map((provider) => provider.name),
+        providerSelection
+      ),
+    [openaiCompatibility, providerSelection]
+  );
 
   const openAddModal = () => {
+    setProviderSelection([]);
+    setCustomProvider('');
     setNameValue('');
     setEditingApiKeyId(null);
     setInputValue('');
@@ -80,6 +104,8 @@ function ScopedApiKeysCardEditor({
     setNameValue(latestNames[nameFingerprints[editingIndex]] ?? '');
     setEditingApiKeyId(apiKeyId);
     setInputValue(apiKeys[editingIndex] ?? '');
+    setProviderSelection(providers[apiKeys[editingIndex] ?? ''] ?? []);
+    setCustomProvider('');
     setFormError('');
     setModalOpen(true);
   };
@@ -91,15 +117,35 @@ function ScopedApiKeysCardEditor({
     setFormError('');
   };
 
-  const updateApiKeys = (nextKeys: string[]) => {
-    onChange(nextKeys.join('\n'));
+  const updateApiKeys = (nextKeys: string[], nextProviders: Record<string, string[]>) => {
+    onChange(nextKeys.join('\n'), nextProviders);
   };
 
   const handleDelete = (apiKeyId: string) => {
     const index = renderApiKeyIds.findIndex((id) => id === apiKeyId);
     if (index < 0) return;
+    const nextKeys = apiKeys.filter((_, i) => i !== index);
+    const deletedKey = apiKeys[index];
     setApiKeyIds(renderApiKeyIds.filter((id) => id !== apiKeyId));
-    updateApiKeys(apiKeys.filter((_, i) => i !== index));
+    updateApiKeys(
+      nextKeys,
+      nextKeys.includes(deletedKey) ? providers : remapApiKeyProviders(providers, deletedKey, null)
+    );
+  };
+
+  const toggleProvider = (provider: string, checked: boolean) => {
+    setProviderSelection((current) =>
+      checked
+        ? Array.from(new Set([...current, provider]))
+        : current.filter((item) => item !== provider)
+    );
+  };
+
+  const handleAddCustomProvider = () => {
+    const provider = normalizeApiKeyProviderId(customProvider);
+    if (!provider) return;
+    toggleProvider(provider, true);
+    setCustomProvider('');
   };
 
   const handleSave = () => {
@@ -129,7 +175,18 @@ function ScopedApiKeysCardEditor({
     if (editingApiKeyId === null) {
       setApiKeyIds([...renderApiKeyIds, makeClientId()]);
     }
-    if (nextKeys.join('\n') !== apiKeys.join('\n')) updateApiKeys(nextKeys);
+    const nextProviders = remapApiKeyProviders(
+      providers,
+      editingIndex >= 0 ? (apiKeys[editingIndex] ?? null) : null,
+      trimmed,
+      providerSelection
+    );
+    if (
+      nextKeys.join('\n') !== apiKeys.join('\n') ||
+      JSON.stringify(nextProviders) !== JSON.stringify(providers)
+    ) {
+      updateApiKeys(nextKeys, nextProviders);
+    }
     closeModal();
   };
 
@@ -168,6 +225,13 @@ function ScopedApiKeysCardEditor({
                     t('config_management.visual.api_keys.input_label')}
                 </div>
                 <div className="item-subtitle">{maskApiKey(String(key || ''))}</div>
+                <div className="item-subtitle">
+                  {providers[key]?.length
+                    ? t('config_management.visual.api_keys.providers_summary', {
+                        providers: providers[key].join(', '),
+                      })
+                    : t('config_management.visual.api_keys.providers_all')}
+                </div>
               </div>
               <div className="item-actions">
                 <Button
@@ -272,6 +336,55 @@ function ScopedApiKeysCardEditor({
               {formError}
             </div>
           )}
+        </div>
+        <div
+          className="form-group"
+          role="group"
+          aria-labelledby={providersLabelId}
+          aria-describedby={providersHintId}
+        >
+          <label id={providersLabelId}>
+            {t('config_management.visual.api_keys.providers_label')}
+          </label>
+          <div className={styles.apiKeyProviderGrid}>
+            {providerOptions.map((provider) => (
+              <SelectionCheckbox
+                key={provider}
+                checked={providerSelection.includes(provider)}
+                onChange={(checked) => toggleProvider(provider, checked)}
+                label={provider}
+                disabled={disabled}
+              />
+            ))}
+          </div>
+          <div className={styles.apiKeyModalInputRow}>
+            <input
+              className="input"
+              value={customProvider}
+              onChange={(event) => setCustomProvider(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  handleAddCustomProvider();
+                }
+              }}
+              placeholder={t('config_management.visual.api_keys.providers_custom_placeholder')}
+              aria-label={t('config_management.visual.api_keys.providers_custom_placeholder')}
+              disabled={disabled}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={handleAddCustomProvider}
+              disabled={disabled || !customProvider.trim()}
+            >
+              {t('config_management.visual.api_keys.providers_custom_add')}
+            </Button>
+          </div>
+          <div id={providersHintId} className="hint">
+            {t('config_management.visual.api_keys.providers_hint')}
+          </div>
         </div>
       </Modal>
     </div>

@@ -1493,6 +1493,12 @@
         "input_hint": "儲存設定後生效。上游提供商金鑰獨立管理，不受此處修改影響。",
         "error_empty": "請輸入 API 金鑰",
         "error_invalid": "API 金鑰包含無效字元",
+        "providers_label": "允許的供應商",
+        "providers_hint": "全部不勾選表示允許所有供應商。設定後，僅由其他供應商提供的模型請求將被拒絕，模型清單也只顯示允許的模型。儲存在 access.api-key-providers。",
+        "providers_all": "所有供應商",
+        "providers_summary": "供應商：{{providers}}",
+        "providers_custom_placeholder": "其他供應商 ID（例如外掛 ID）",
+        "providers_custom_add": "新增供應商",
         "strength": {
           "label": "API 金鑰強度",
           "empty": "待輸入",

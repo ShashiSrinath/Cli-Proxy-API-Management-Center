@@ -1467,6 +1467,12 @@
         "input_hint": "保存配置后生效。上游提供商密钥独立管理，不受此处修改影响。",
         "error_empty": "请输入 API 密钥",
         "error_invalid": "API 密钥包含无效字符",
+        "providers_label": "允许的提供商",
+        "providers_hint": "全部不勾选表示允许所有提供商。设置后，仅由其他提供商提供的模型请求将被拒绝，模型列表也只显示允许的模型。保存在 access.api-key-providers。",
+        "providers_all": "所有提供商",
+        "providers_summary": "提供商：{{providers}}",
+        "providers_custom_placeholder": "其他提供商 ID（例如插件 ID）",
+        "providers_custom_add": "添加提供商",
         "strength": {
           "label": "API 密钥强度",
           "empty": "待输入",

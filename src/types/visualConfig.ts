@@ -166,6 +166,8 @@ export type VisualConfigValues = {
   authDir: string;
   /** Client authentication keys at access.api-keys (never the upstream api-keys map). */
   apiKeysText: string;
+  /** Per-key upstream provider allow-lists at access.api-key-providers. Missing keys are unrestricted. */
+  apiKeyProviders: Record<string, string[]>;
   pluginsEnabled: boolean;
   pluginStoreSources: string[];
   pluginStoreAuth: PluginStoreAuthRule[];
@@ -269,6 +271,7 @@ export const DEFAULT_VISUAL_VALUES: VisualConfigValues = {
   rmPanelRepo: '',
   authDir: '',
   apiKeysText: '',
+  apiKeyProviders: {},
   pluginsEnabled: false,
   pluginStoreSources: [],
   pluginStoreAuth: [],

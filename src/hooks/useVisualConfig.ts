@@ -53,6 +53,30 @@ function parseApiKeysText(raw: unknown): string {
 type YamlDocument = ReturnType<typeof parseDocument>;
 type YamlPath = string[];
 
+/** Reads access.api-key-providers, dropping keys without a usable provider list. */
+export function parseApiKeyProviders(raw: unknown): Record<string, string[]> {
+  const record = asRecord(raw);
+  if (!record) return {};
+  const result: Record<string, string[]> = {};
+  Object.entries(record).forEach(([key, value]) => {
+    const providers = normalizeApiKeyProviderList(value);
+    if (key.trim() && providers.length > 0) result[key.trim()] = providers;
+  });
+  return result;
+}
+
+function normalizeApiKeyProviderList(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const providers = raw
+    .map((item) =>
+      String(item ?? '')
+        .trim()
+        .toLowerCase()
+    )
+    .filter(Boolean);
+  return Array.from(new Set(providers));
+}
+
 function docHas(doc: YamlDocument, path: YamlPath): boolean {
   return doc.hasIn(path);
 }
@@ -1259,6 +1283,12 @@ function getNextDirtyFields(
     ] as Array<keyof VisualConfigValues>
   ).forEach(updateScalarDirty);
 
+  if (Object.prototype.hasOwnProperty.call(patch, 'apiKeyProviders')) {
+    updateDirty(
+      'apiKeyProviders',
+      JSON.stringify(nextValues.apiKeyProviders) === JSON.stringify(baselineValues.apiKeyProviders)
+    );
+  }
   if (Object.prototype.hasOwnProperty.call(patch, 'pluginStoreSources')) {
     updateDirty(
       'pluginStoreSources',
@@ -1457,6 +1487,7 @@ function parseVisualValuesFromYaml(yamlContent: string): VisualConfigValues {
 
     authDir: typeof v8Oauth?.['auth-dir'] === 'string' ? v8Oauth?.['auth-dir'] : '',
     apiKeysText: parseApiKeysText(asRecord(parsed.access)?.['api-keys']),
+    apiKeyProviders: parseApiKeyProviders(asRecord(parsed.access)?.['api-key-providers']),
     pluginsEnabled: Boolean(plugins?.enabled),
     pluginStoreSources: parseStringList(plugins?.['store-sources']),
     pluginStoreAuth: parsePluginStoreAuthRules(plugins?.['store-auth']),
@@ -1743,6 +1774,25 @@ export function useVisualConfig() {
             doc.setIn(['access', 'api-keys'], apiKeys);
           } else if (docHas(doc, ['access', 'api-keys'])) {
             doc.deleteIn(['access', 'api-keys']);
+          }
+        }
+        if (dirtyFields.has('apiKeysText') || dirtyFields.has('apiKeyProviders')) {
+          // Restrictions only apply to configured keys; drop entries for removed keys.
+          const configuredKeys = new Set(
+            values.apiKeysText
+              .split('\n')
+              .map((key) => key.trim())
+              .filter(Boolean)
+          );
+          const apiKeyProviders: Record<string, string[]> = {};
+          Object.entries(values.apiKeyProviders).forEach(([key, providers]) => {
+            const normalized = normalizeApiKeyProviderList(providers);
+            if (configuredKeys.has(key) && normalized.length > 0) apiKeyProviders[key] = normalized;
+          });
+          if (Object.keys(apiKeyProviders).length > 0) {
+            doc.setIn(['access', 'api-key-providers'], apiKeyProviders);
+          } else if (docHas(doc, ['access', 'api-key-providers'])) {
+            doc.deleteIn(['access', 'api-key-providers']);
           }
         }
 
