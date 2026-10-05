@@ -1,6 +1,7 @@
-import { describe, expect, test } from 'bun:test';
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import i18n from '@/i18n';
 import {
   readModelOptions,
   buildModelOptions,
@@ -14,6 +15,20 @@ const draft = (model: ModelAlias): ModelEntryInput => ({
   name: model.name,
   thinkingJson: model.thinking === undefined ? undefined : JSON.stringify(model.thinking),
   ...readModelOptions(model),
+});
+
+/**
+ * Many assertions below match on i18n keys rather than rendered text, so pin
+ * i18next's special `cimode`, which always returns the key. Without this the
+ * result depends on whether another test file has already initialized i18n in
+ * the default render language.
+ */
+beforeAll(async () => {
+  await i18n.changeLanguage('cimode');
+});
+
+afterAll(async () => {
+  await i18n.changeLanguage('en');
 });
 
 describe('provider model options', () => {
