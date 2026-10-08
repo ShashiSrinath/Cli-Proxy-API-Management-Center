@@ -206,7 +206,7 @@ describe('v8 scalar read/write path parity', () => {
       const output = config.applyVisualChangesToYaml(fixture);
       const path = [...entry.yamlKeys!];
       if (field === 'tlsEnable') path.push('enable');
-      if (field === 'pluginsEnabled') path.push('enabled');
+      if (field === 'pluginsEnabled' || field === 'modelFallbackEnabled') path.push('enabled');
       const expected =
         field === 'apiKeysText' ? [value] : numericFields.has(field) ? Number(value) : value;
       expect(

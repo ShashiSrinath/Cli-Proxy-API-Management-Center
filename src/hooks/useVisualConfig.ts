@@ -19,6 +19,12 @@ import type {
 import { DEFAULT_VISUAL_VALUES } from '@/types/visualConfig';
 import { assertConfigListsUnchanged, ConfigDraftConflictError } from '@/services/api/configPatch';
 import {
+  areModelFallbackRulesEqual,
+  parseModelFallbackEnabled,
+  parseModelFallbackRules,
+  serializeModelFallbackRules,
+} from '@/features/config/modelFallback';
+import {
   ADDITION_FIELDS,
   ICE_KEY,
   readVisualAdditions,
@@ -1140,6 +1146,11 @@ function alignRebasedValues(
       draft.pluginStoreAuth,
       (rule) => rule.match
     ),
+    modelFallbackRules: alignRebasedEntries(
+      baseline.modelFallbackRules,
+      draft.modelFallbackRules,
+      (rule) => rule.model
+    ),
   };
 }
 
@@ -1270,6 +1281,7 @@ function getNextDirtyFields(
       'logsMaxTotalSizeMb',
       'proxyUrl',
       'forceModelPrefix',
+      'modelFallbackEnabled',
       'requestRetry',
       'maxRetryCredentials',
       'maxRetryInterval',
@@ -1308,6 +1320,12 @@ function getNextDirtyFields(
     updateDirty(
       'devinSensitiveWords',
       areStringArraysEqual(nextValues.devinSensitiveWords, baselineValues.devinSensitiveWords)
+    );
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'modelFallbackRules')) {
+    updateDirty(
+      'modelFallbackRules',
+      areModelFallbackRulesEqual(nextValues.modelFallbackRules, baselineValues.modelFallbackRules)
     );
   }
   if (Object.prototype.hasOwnProperty.call(patch, 'pluginStoreAuth')) {
@@ -1504,6 +1522,8 @@ function parseVisualValuesFromYaml(yamlContent: string): VisualConfigValues {
 
     proxyUrl: typeof v8Requests?.['proxy-url'] === 'string' ? v8Requests?.['proxy-url'] : '',
     forceModelPrefix: Boolean(v8Routing?.['force-model-prefix']),
+    modelFallbackEnabled: parseModelFallbackEnabled(v8Routing?.['model-fallback']),
+    modelFallbackRules: parseModelFallbackRules(v8Routing?.['model-fallback']),
     passthroughHeaders: Boolean(v8Requests?.['passthrough-headers']),
     requestRetry: String(v8RoutingRetry?.['request-retry'] ?? ''),
     maxRetryCredentials: String(v8RoutingRetry?.['max-retry-credentials'] ?? ''),
@@ -1701,6 +1721,8 @@ export function useVisualConfig() {
           routingNode.value === null &&
           [
             'forceModelPrefix',
+            'modelFallbackEnabled',
+            'modelFallbackRules',
             'requestRetry',
             'maxRetryCredentials',
             'maxRetryInterval',
@@ -1860,6 +1882,20 @@ export function useVisualConfig() {
           setStringInDoc(doc, ['requests', 'proxy-url'], values.proxyUrl);
         if (dirtyFields.has('forceModelPrefix')) {
           setBooleanInDoc(doc, ['routing', 'force-model-prefix'], values.forceModelPrefix);
+        }
+        if (dirtyFields.has('modelFallbackEnabled') || dirtyFields.has('modelFallbackRules')) {
+          const fallbackRules = serializeModelFallbackRules(values.modelFallbackRules);
+          if (values.modelFallbackEnabled || fallbackRules.length > 0) {
+            ensureMapInDoc(doc, ['routing', 'model-fallback']);
+            doc.setIn(['routing', 'model-fallback', 'enabled'], values.modelFallbackEnabled);
+            if (fallbackRules.length > 0) {
+              doc.setIn(['routing', 'model-fallback', 'rules'], fallbackRules);
+            } else if (docHas(doc, ['routing', 'model-fallback', 'rules'])) {
+              doc.deleteIn(['routing', 'model-fallback', 'rules']);
+            }
+          } else if (docHas(doc, ['routing', 'model-fallback'])) {
+            doc.deleteIn(['routing', 'model-fallback']);
+          }
         }
         if (dirtyFields.has('passthroughHeaders')) {
           setBooleanInDoc(doc, ['requests', 'passthrough-headers'], values.passthroughHeaders);

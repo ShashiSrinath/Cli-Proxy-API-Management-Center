@@ -435,6 +435,14 @@ export const CONFIG_FIELD_SEARCH_INDEX: ConfigFieldSearchEntry[] = [
     yamlKeys: ['routing', 'force-model-prefix'],
   },
   {
+    fieldId: 'modelFallback',
+    sectionId: 'network',
+    labelKey: L('sections.network.model_fallback'),
+    hintKey: L('sections.network.model_fallback_desc'),
+    yamlKeys: ['routing', 'model-fallback'],
+    keywords: ['fallback', 'reroute', 'quota', 'limit', 'reasoning effort'],
+  },
+  {
     fieldId: 'passthroughHeaders',
     sectionId: 'network',
     labelKey: L('sections.network.passthrough_headers'),

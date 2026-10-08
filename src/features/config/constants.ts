@@ -167,6 +167,7 @@ export const FIELD_VALUE_KEYS: Record<string, readonly string[]> = {
   gptImage2BaseModel: ['gptImage2BaseModel'],
   routingSessionAffinityTTL: ['routingSessionAffinityTTL'],
   forceModelPrefix: ['forceModelPrefix'],
+  modelFallback: ['modelFallbackEnabled', 'modelFallbackRules'],
   passthroughHeaders: ['passthroughHeaders'],
   disableCooling: ['disableCooling'],
   routingSessionAffinity: ['routingSessionAffinity'],

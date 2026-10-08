@@ -115,6 +115,17 @@ export type PluginStoreAuthRule = {
   allowInsecure: boolean;
 };
 
+/** One routing.model-fallback rule: main model rerouted to the fallback once out of limits. */
+export type ModelFallbackRule = {
+  id: string;
+  model: string;
+  fallbackModel: string;
+  /** Provider ids or openai-compatibility names; empty means every provider. */
+  fallbackProviders: string[];
+  /** Reasoning effort override for the fallback request; empty keeps the client's effort. */
+  fallbackReasoningEffort: string;
+};
+
 /** UI draft keys; YAML persistence uses the v8 tree, not these flattened names. */
 export type VisualConfigValues = {
   trustedProxies: string[];
@@ -180,6 +191,10 @@ export type VisualConfigValues = {
   redisUsageQueueRetentionSeconds: string;
   proxyUrl: string;
   forceModelPrefix: boolean;
+  /** routing.model-fallback.enabled */
+  modelFallbackEnabled: boolean;
+  /** routing.model-fallback.rules */
+  modelFallbackRules: ModelFallbackRule[];
   passthroughHeaders: boolean;
   requestRetry: string;
   maxRetryCredentials: string;
@@ -284,6 +299,8 @@ export const DEFAULT_VISUAL_VALUES: VisualConfigValues = {
   redisUsageQueueRetentionSeconds: '',
   proxyUrl: '',
   forceModelPrefix: false,
+  modelFallbackEnabled: false,
+  modelFallbackRules: [],
   passthroughHeaders: false,
   requestRetry: '',
   maxRetryCredentials: '',

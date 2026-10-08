@@ -1,20 +1,22 @@
-import { useId } from 'react';
+import { useCallback, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import type { VisualConfigValues } from '@/types/visualConfig';
+import type { ModelFallbackRule, VisualConfigValues } from '@/types/visualConfig';
 import { CONFIG_TAB_ICONS, SECTION_INDEX_LABELS } from '../../constants';
 import type { ConfigSectionProps } from '../../types';
 import { SectionCard } from '../SectionCard';
 import {
   FieldAnchor,
   FieldGrid,
+  FieldGroup,
   FieldShell,
   FieldStack,
   ToggleRow,
 } from '../fields/FieldPrimitives';
 import { ProxyUrlField, SponsorHintSpacer } from '../fields/sharedFields';
 import { getValidationMessage } from '../blocks/shared';
+import { ModelFallbackRulesEditor } from '../blocks/ModelFallbackRulesEditor';
 
 const Icon = CONFIG_TAB_ICONS.network;
 
@@ -31,6 +33,10 @@ export function SectionNetwork({
   const routingStrategyHintId = `${routingStrategyLabelId}-hint`;
   const disableImageGenerationLabelId = useId();
   const disableImageGenerationHintId = `${disableImageGenerationLabelId}-hint`;
+  const handleModelFallbackRulesChange = useCallback(
+    (modelFallbackRules: ModelFallbackRule[]) => onChange({ modelFallbackRules }),
+    [onChange]
+  );
 
   const requestRetryError = getValidationMessage(t, validationErrors?.requestRetry);
   const maxRetryCredentialsError = getValidationMessage(t, validationErrors?.maxRetryCredentials);
@@ -290,6 +296,25 @@ export function SectionNetwork({
             />
           </FieldAnchor>
         </FieldGrid>
+
+        <FieldAnchor fieldId="modelFallback">
+          <FieldGroup
+            title={t('config_management.visual.sections.network.model_fallback')}
+            description={t('config_management.visual.sections.network.model_fallback_desc')}
+          >
+            <ToggleRow
+              title={t('config_management.visual.sections.network.model_fallback_enabled')}
+              checked={values.modelFallbackEnabled}
+              disabled={disabled}
+              onChange={(modelFallbackEnabled) => onChange({ modelFallbackEnabled })}
+            />
+            <ModelFallbackRulesEditor
+              value={values.modelFallbackRules}
+              disabled={disabled}
+              onChange={handleModelFallbackRulesChange}
+            />
+          </FieldGroup>
+        </FieldAnchor>
       </FieldStack>
     </SectionCard>
   );
