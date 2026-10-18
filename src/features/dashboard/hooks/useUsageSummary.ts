@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useInterval } from '@/hooks/useInterval';
 import { usageApi } from '@/services/api';
 import { useAuthStore } from '@/stores';
+import { syncLegacyApiKeyNames } from '@/features/config/apiKeyNames';
 import type { UsageRange, UsageSummary } from '@/types/usage';
 import { browserTimeZone } from '../utils';
 
@@ -24,6 +25,7 @@ export function useUsageSummary() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const requestIdRef = useRef(0);
+  const legacyNamesSyncedRef = useRef(false);
   const timeZone = browserTimeZone();
 
   const load = useCallback(async () => {
@@ -45,7 +47,16 @@ export function useUsageSummary() {
 
   useEffect(() => {
     if (!connected) return;
-    void load();
+    if (legacyNamesSyncedRef.current) {
+      void load();
+      return;
+    }
+    legacyNamesSyncedRef.current = true;
+    // Names set in older builds live only in this browser; move them to the server first so
+    // the first summary already labels those keys. A failed sync only leaves keys unnamed.
+    void syncLegacyApiKeyNames(useAuthStore.getState().apiBase)
+      .catch(() => false)
+      .then(() => load());
   }, [connected, load]);
 
   // Drop any in-flight response once the page unmounts.

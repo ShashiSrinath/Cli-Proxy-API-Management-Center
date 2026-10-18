@@ -1,11 +1,13 @@
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test';
 import { createHash } from 'node:crypto';
 import {
   apiKeyNameFingerprint,
   clearLegacyApiKeyNames,
   migrateLegacyApiKeyNames,
   readApiKeyNames,
+  syncLegacyApiKeyNames,
 } from '../src/features/config/apiKeyNames';
+import { apiClient } from '../src/services/api/client';
 import { obfuscatedStorage } from '../src/services/storage/secureStorage';
 
 const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
@@ -128,5 +130,46 @@ describe('legacy browser API key names', () => {
       key: 'Server',
     });
     expect(() => clearLegacyApiKeyNames('server', ['key'])).not.toThrow();
+  });
+});
+
+describe('syncLegacyApiKeyNames', () => {
+  const spies: Array<{ mockRestore(): void }> = [];
+  afterEach(() => spies.splice(0).forEach((mocked) => mocked.mockRestore()));
+
+  const mockServer = (apiKeys: string[], names: Record<string, string>) => {
+    const get = spyOn(apiClient, 'get').mockImplementation((async (path: string) =>
+      path.endsWith('/api-key-names') ? names : apiKeys) as never);
+    const put = spyOn(apiClient, 'put').mockResolvedValue({} as never);
+    spies.push(get, put);
+    return { get, put };
+  };
+
+  test('writes legacy names for unnamed configured keys and clears them locally', async () => {
+    seedLegacyNames('server', { alpha: 'Laptop', beta: 'Old CI', gone: 'Removed' });
+    const { put } = mockServer(['alpha', 'beta'], { beta: 'CI' });
+
+    expect(await syncLegacyApiKeyNames('server')).toBe(true);
+    expect(put).toHaveBeenCalledWith('/config/access/api-key-names', {
+      beta: 'CI',
+      alpha: 'Laptop',
+    });
+    expect(Object.keys(readApiKeyNames('server'))).toEqual([
+      apiKeyNameFingerprint('server', 'gone'),
+    ]);
+  });
+
+  test('makes no request when this browser has no legacy names', async () => {
+    const { get, put } = mockServer(['alpha'], {});
+    expect(await syncLegacyApiKeyNames('server')).toBe(false);
+    expect(get).not.toHaveBeenCalled();
+    expect(put).not.toHaveBeenCalled();
+  });
+
+  test('does not write when the server already names every legacy key', async () => {
+    seedLegacyNames('server', { alpha: 'Laptop' });
+    const { put } = mockServer(['alpha'], { alpha: 'Server name' });
+    expect(await syncLegacyApiKeyNames('server')).toBe(false);
+    expect(put).not.toHaveBeenCalled();
   });
 });

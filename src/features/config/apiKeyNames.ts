@@ -2,7 +2,9 @@
 // read names that older builds kept in browser storage and clear them after a successful save.
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
-import { getApiKeyName } from '@/services/api/apiKeyNames';
+import { apiKeysApi } from '@/services/api/apiKeys';
+import { apiKeyNamesApi, areApiKeyNamesEqual, getApiKeyName } from '@/services/api/apiKeyNames';
+import { guardConfigConnection } from '@/services/api/configValue';
 import { obfuscatedStorage } from '@/services/storage/secureStorage';
 
 const STORAGE_PREFIX = 'api-key-names:v1:';
@@ -58,4 +60,21 @@ export function clearLegacyApiKeyNames(apiBase: string, apiKeys: readonly string
   } catch {
     // Storage unavailable: nothing readable was left to clear.
   }
+}
+
+/**
+ * Copies legacy browser names for configured keys to the server without waiting for a config
+ * save, so views that only read server names (the usage dashboard) show them. Returns true
+ * when names were written.
+ */
+export async function syncLegacyApiKeyNames(apiBase: string): Promise<boolean> {
+  if (!Object.keys(readApiKeyNames(apiBase)).length) return false;
+  const assertConnection = guardConfigConnection();
+  const [apiKeys, serverNames] = await Promise.all([apiKeysApi.list(), apiKeyNamesApi.list()]);
+  const merged = migrateLegacyApiKeyNames(apiBase, apiKeys, serverNames);
+  if (areApiKeyNamesEqual(merged, serverNames)) return false;
+  assertConnection();
+  await apiKeyNamesApi.replace(merged);
+  clearLegacyApiKeyNames(apiBase, apiKeys);
+  return true;
 }
