@@ -1,10 +1,14 @@
 import { createElement, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { useVisualConfig } from '../../src/hooks/useVisualConfig';
-import type { VisualConfigValues } from '../../src/types/visualConfig';
+import type { VisualApiKeyNames, VisualConfigValues } from '../../src/types/visualConfig';
 
 /** Exercise the real reducer/codec without a browser or management connection. */
-export function runVisualConfig(yaml?: string, patches: Partial<VisualConfigValues>[] = []) {
+export function runVisualConfig(
+  yaml?: string,
+  patches: Partial<VisualConfigValues>[] = [],
+  apiKeyNames?: VisualApiKeyNames
+) {
   let result: ReturnType<typeof useVisualConfig> | undefined;
 
   function Harness() {
@@ -13,7 +17,7 @@ export function runVisualConfig(yaml?: string, patches: Partial<VisualConfigValu
 
     if (phase === 0) {
       if (yaml !== undefined) {
-        const loaded = visualConfig.loadVisualValuesFromYaml(yaml);
+        const loaded = visualConfig.loadVisualValuesFromYaml(yaml, apiKeyNames);
         if (!loaded.ok) throw new Error(loaded.error);
       }
       setPhase(1);

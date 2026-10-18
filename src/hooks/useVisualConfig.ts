@@ -12,12 +12,14 @@ import type {
   PayloadParamValueType,
   PayloadRule,
   RoutingStrategy,
+  VisualApiKeyNames,
   VisualConfigValues,
   VisualConfigValidationErrors,
   PayloadParamValidationErrorCode,
 } from '@/types/visualConfig';
 import { DEFAULT_VISUAL_VALUES } from '@/types/visualConfig';
 import { assertConfigListsUnchanged, ConfigDraftConflictError } from '@/services/api/configPatch';
+import { areApiKeyNamesEqual } from '@/services/api/apiKeyNames';
 import {
   areModelFallbackRulesEqual,
   parseModelFallbackEnabled,
@@ -1168,6 +1170,8 @@ type VisualConfigAction =
       type: 'load_success';
       yaml: string;
       values: VisualConfigValues;
+      /** Omitted for YAML-only reloads, which keep the current names draft and snapshot. */
+      apiKeyNames?: VisualApiKeyNames;
     }
   | {
       type: 'rebase_success';
@@ -1301,6 +1305,12 @@ function getNextDirtyFields(
       JSON.stringify(nextValues.apiKeyProviders) === JSON.stringify(baselineValues.apiKeyProviders)
     );
   }
+  if (Object.prototype.hasOwnProperty.call(patch, 'apiKeyNames')) {
+    updateDirty(
+      'apiKeyNames',
+      areApiKeyNamesEqual(nextValues.apiKeyNames, baselineValues.apiKeyNames)
+    );
+  }
   if (Object.prototype.hasOwnProperty.call(patch, 'pluginStoreSources')) {
     updateDirty(
       'pluginStoreSources',
@@ -1399,27 +1409,42 @@ function visualConfigReducer(
   action: VisualConfigAction
 ): VisualConfigState {
   switch (action.type) {
-    case 'load_success':
+    case 'load_success': {
+      const names = action.apiKeyNames ?? {
+        server: state.baselineValues.apiKeyNames,
+        draft: state.visualValues.apiKeyNames,
+      };
       return {
         baselineYaml: action.yaml,
-        visualValues: action.values,
-        baselineValues: deepClone(action.values),
+        visualValues: { ...action.values, apiKeyNames: names.draft },
+        baselineValues: { ...deepClone(action.values), apiKeyNames: { ...names.server } },
         rebasedPayload: null,
-        dirtyFields: new Set(),
+        dirtyFields: areApiKeyNamesEqual(names.draft, names.server)
+          ? new Set()
+          : new Set(['apiKeyNames']),
         visualParseError: null,
       };
+    }
     case 'rebase_success': {
-      const values = alignRebasedValues(action.baseline, action.draft);
+      // Names are not in YAML: the retained draft keeps its names; only the server snapshot stands.
+      const baseline = {
+        ...action.baseline,
+        apiKeyNames: { ...state.baselineValues.apiKeyNames },
+      };
+      const values = {
+        ...alignRebasedValues(baseline, action.draft),
+        apiKeyNames: state.visualValues.apiKeyNames,
+      };
       return {
         baselineYaml: action.serverYaml,
         visualValues: values,
-        baselineValues: action.baseline,
+        baselineValues: baseline,
         rebasedPayload: {
           yaml: action.draftYaml,
           serverYaml: action.serverYaml,
           values: deepClone(values),
         },
-        dirtyFields: getNextDirtyFields(new Set(), values, values, action.baseline),
+        dirtyFields: getNextDirtyFields(new Set(), values, values, baseline),
         visualParseError: null,
       };
     }
@@ -1506,6 +1531,8 @@ function parseVisualValuesFromYaml(yamlContent: string): VisualConfigValues {
     authDir: typeof v8Oauth?.['auth-dir'] === 'string' ? v8Oauth?.['auth-dir'] : '',
     apiKeysText: parseApiKeysText(asRecord(parsed.access)?.['api-keys']),
     apiKeyProviders: parseApiKeyProviders(asRecord(parsed.access)?.['api-key-providers']),
+    // Names are served by access.api-key-names, outside this YAML draft.
+    apiKeyNames: {},
     pluginsEnabled: Boolean(plugins?.enabled),
     pluginStoreSources: parseStringList(plugins?.['store-sources']),
     pluginStoreAuth: parsePluginStoreAuthRules(plugins?.['store-auth']),
@@ -1636,17 +1663,20 @@ export function useVisualConfig() {
     ]
   );
 
-  const loadVisualValuesFromYaml = useCallback((yamlContent: string) => {
-    try {
-      const newValues = parseVisualValuesFromYaml(yamlContent);
-      dispatch({ type: 'load_success', values: newValues, yaml: yamlContent });
-      return { ok: true as const };
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Invalid YAML';
-      dispatch({ type: 'load_error', error: message });
-      return { ok: false as const, error: message };
-    }
-  }, []);
+  const loadVisualValuesFromYaml = useCallback(
+    (yamlContent: string, apiKeyNames?: VisualApiKeyNames) => {
+      try {
+        const newValues = parseVisualValuesFromYaml(yamlContent);
+        dispatch({ type: 'load_success', values: newValues, yaml: yamlContent, apiKeyNames });
+        return { ok: true as const };
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Invalid YAML';
+        dispatch({ type: 'load_error', error: message });
+        return { ok: false as const, error: message };
+      }
+    },
+    []
+  );
 
   // Both documents are parsed before dispatch so a malformed draft cannot advance the baseline.
   const rebaseVisualValuesFromYaml = useCallback((serverYaml: string, draftYaml: string) => {

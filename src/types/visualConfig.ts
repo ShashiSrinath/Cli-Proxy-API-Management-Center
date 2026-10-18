@@ -179,6 +179,8 @@ export type VisualConfigValues = {
   apiKeysText: string;
   /** Per-key upstream provider allow-lists at access.api-key-providers. Missing keys are unrestricted. */
   apiKeyProviders: Record<string, string[]>;
+  /** Display names keyed by raw client key. Saved via access.api-key-names, not the YAML draft. */
+  apiKeyNames: Record<string, string>;
   pluginsEnabled: boolean;
   pluginStoreSources: string[];
   pluginStoreAuth: PluginStoreAuthRule[];
@@ -287,6 +289,7 @@ export const DEFAULT_VISUAL_VALUES: VisualConfigValues = {
   authDir: '',
   apiKeysText: '',
   apiKeyProviders: {},
+  apiKeyNames: {},
   pluginsEnabled: false,
   pluginStoreSources: [],
   pluginStoreAuth: [],
@@ -339,4 +342,10 @@ export const DEFAULT_VISUAL_VALUES: VisualConfigValues = {
     bootstrapRetries: '',
     nonstreamKeepaliveInterval: '',
   },
+};
+
+/** Server-side API key names: `server` is the last saved map, `draft` is what the form edits. */
+export type VisualApiKeyNames = {
+  server: Record<string, string>;
+  draft: Record<string, string>;
 };

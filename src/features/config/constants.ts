@@ -147,7 +147,7 @@ export const FIELD_VALUE_KEYS: Record<string, readonly string[]> = {
   host: ['host'],
   port: ['port'],
   authDir: ['authDir'],
-  apiKeys: ['apiKeysText', 'apiKeyProviders'],
+  apiKeys: ['apiKeysText', 'apiKeyProviders', 'apiKeyNames'],
   tlsEnable: ['tlsEnable'],
   tlsCert: ['tlsCert'],
   tlsKey: ['tlsKey'],

@@ -2,8 +2,9 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
 import {
   apiKeyNameFingerprint,
+  clearLegacyApiKeyNames,
+  migrateLegacyApiKeyNames,
   readApiKeyNames,
-  saveApiKeyName,
 } from '../src/features/config/apiKeyNames';
 import { obfuscatedStorage } from '../src/services/storage/secureStorage';
 
@@ -27,38 +28,46 @@ afterEach(() => {
   else Reflect.deleteProperty(globalThis, 'localStorage');
 });
 
-describe('local API key names', () => {
-  test('persists optional names by server and key, not list position', () => {
-    expect(saveApiKeyName('https://one.test', 'fixture-key-a', ' Alice ')).toBe(true);
-    saveApiKeyName('https://one.test', 'fixture-key-b', 'Bob');
-    saveApiKeyName('https://two.test', 'fixture-key-a', 'Other');
-    expect(readApiKeyNames('https://one.test')).toEqual({
-      [apiKeyNameFingerprint('https://one.test', 'fixture-key-a')]: 'Alice',
-      [apiKeyNameFingerprint('https://one.test', 'fixture-key-b')]: 'Bob',
-    });
+/** Writes browser entries in the shape the retired editor stored, keyed by fingerprint. */
+const seedLegacyNames = (apiBase: string, names: Record<string, string>) => {
+  obfuscatedStorage.setItem(
+    `api-key-names:v1:${apiBase}`,
+    Object.fromEntries(
+      Object.entries(names).map(([key, name]) => [apiKeyNameFingerprint(apiBase, key), name])
+    )
+  );
+};
+
+describe('legacy browser API key names', () => {
+  test('fingerprints match the scheme older builds wrote, and never contain raw keys', () => {
+    const apiBase = 'https://one.test';
+    const apiKey = 'sk-fixture-not-a-real-credential';
+    const expected = createHash('sha256')
+      .update(JSON.stringify(['api-key-name', apiBase, apiKey]))
+      .digest('hex');
+    expect(apiKeyNameFingerprint(apiBase, apiKey)).toBe(expected);
+    seedLegacyNames(apiBase, { [apiKey]: 'Fixture' });
+    expect(JSON.stringify(obfuscatedStorage.getItem(`api-key-names:v1:${apiBase}`))).not.toContain(
+      apiKey
+    );
+    expect(apiKeyNameFingerprint('https://two.test', apiKey)).not.toBe(expected);
+  });
+
+  test('migrates a legacy name only into a configured key the server has not named', () => {
+    seedLegacyNames('https://one.test', { alpha: 'Alice', beta: 'Bob', gamma: 'Carol' });
     expect(
-      readApiKeyNames('https://two.test')[
-        apiKeyNameFingerprint('https://two.test', 'fixture-key-a')
-      ]
-    ).toBe('Other');
-    expect([...values.values()].join('')).not.toContain('fixture-key-a');
+      migrateLegacyApiKeyNames('https://one.test', ['alpha', 'beta'], { beta: 'Server Bob' })
+    ).toEqual({ beta: 'Server Bob', alpha: 'Alice' });
+    expect(migrateLegacyApiKeyNames('https://two.test', ['alpha'], {})).toEqual({});
   });
 
-  test('clears names without removing other entries', () => {
-    saveApiKeyName('server', 'one', 'First');
-    saveApiKeyName('server', 'two', 'Second');
-    saveApiKeyName('server', 'one', '  ');
-    expect(readApiKeyNames('server')).toEqual({
-      [apiKeyNameFingerprint('server', 'two')]: 'Second',
-    });
-    saveApiKeyName('server', 'two', '');
-    expect(values.size).toBe(0);
-  });
-
-  test('handles special property names', () => {
-    saveApiKeyName('server', '__proto__', 'Special');
-    expect(readApiKeyNames('server')[apiKeyNameFingerprint('server', '__proto__')]).toBe('Special');
-    expect(Object.hasOwn(readApiKeyNames('server'), '__proto__')).toBe(false);
+  test('handles special property names without prototype pollution', () => {
+    // A computed key creates an own property; the literal form would set the prototype instead.
+    seedLegacyNames('server', { ['__proto__']: 'Special' });
+    const migrated = migrateLegacyApiKeyNames('server', ['__proto__'], {});
+    expect(Object.keys(migrated)).toEqual(['__proto__']);
+    expect(Object.getOwnPropertyDescriptor(migrated, '__proto__')?.value).toBe('Special');
+    expect(Object.getPrototypeOf(migrated)).toBe(Object.prototype);
   });
 
   test('ignores malformed data and invalid entries', () => {
@@ -76,37 +85,31 @@ describe('local API key names', () => {
     expect(readApiKeyNames('server')).toEqual({});
   });
 
-  test('stores only SHA-256 fingerprints even after reversing storage obfuscation', () => {
-    const apiBase = 'https://one.test';
-    const apiKey = 'sk-fixture-not-a-real-credential';
-    saveApiKeyName(apiBase, apiKey, 'Fixture');
-    const stored = obfuscatedStorage.getItem<Record<string, string>>(`api-key-names:v1:${apiBase}`);
-    const expected = createHash('sha256')
-      .update(JSON.stringify(['api-key-name', apiBase, apiKey]))
-      .digest('hex');
-    expect(stored).toEqual({ [expected]: 'Fixture' });
-    expect(JSON.stringify(stored)).not.toContain(apiKey);
-    expect(Object.keys(stored!)).toEqual([apiKeyNameFingerprint(apiBase, apiKey)]);
-    expect(apiKeyNameFingerprint('https://two.test', apiKey)).not.toBe(expected);
+  test('clears only the given keys and removes storage once nothing is left', () => {
+    seedLegacyNames('server', { one: 'First', two: 'Second' });
+    clearLegacyApiKeyNames('server', ['one']);
+    expect(readApiKeyNames('server')).toEqual({
+      [apiKeyNameFingerprint('server', 'two')]: 'Second',
+    });
+    clearLegacyApiKeyNames('server', ['two']);
+    expect(values.size).toBe(0);
   });
 
-  test('matches by the entire key rather than its masked display', () => {
-    const keys = ['sk-same-first-middle-a-last', 'sk-same-first-middle-b-last'];
-    saveApiKeyName('server', keys[0], 'First');
-    saveApiKeyName('server', keys[1], 'Second');
-    const names = readApiKeyNames('server');
-    expect(names[apiKeyNameFingerprint('server', keys[0])]).toBe('First');
-    expect(names[apiKeyNameFingerprint('server', keys[1])]).toBe('Second');
+  test('leaves storage untouched when no legacy entry matches the keys', () => {
+    seedLegacyNames('server', { one: 'First' });
+    const before = [...values.values()].join('');
+    clearLegacyApiKeyNames('server', ['unrelated']);
+    expect([...values.values()].join('')).toBe(before);
   });
 
   test('does not need Web Crypto or a secure context', () => {
+    seedLegacyNames('http://lan.test', { 'fixture-key': 'LAN' });
     const originalCrypto = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
     try {
       Object.defineProperty(globalThis, 'crypto', { configurable: true, value: undefined });
-      expect(saveApiKeyName('http://lan.test', 'fixture-key', 'LAN')).toBe(true);
-      expect(
-        readApiKeyNames('http://lan.test')[apiKeyNameFingerprint('http://lan.test', 'fixture-key')]
-      ).toBe('LAN');
+      expect(migrateLegacyApiKeyNames('http://lan.test', ['fixture-key'], {})).toEqual({
+        'fixture-key': 'LAN',
+      });
     } finally {
       if (originalCrypto) Object.defineProperty(globalThis, 'crypto', originalCrypto);
       else Reflect.deleteProperty(globalThis, 'crypto');
@@ -121,6 +124,9 @@ describe('local API key names', () => {
       },
     });
     expect(readApiKeyNames('server')).toEqual({});
-    expect(saveApiKeyName('server', 'key', 'Name')).toBe(false);
+    expect(migrateLegacyApiKeyNames('server', ['key'], { key: 'Server' })).toEqual({
+      key: 'Server',
+    });
+    expect(() => clearLegacyApiKeyNames('server', ['key'])).not.toThrow();
   });
 });

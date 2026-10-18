@@ -115,8 +115,11 @@ export function ApiKeysField({ values, disabled, onChange }: SharedFieldProps) {
         <ApiKeysCardEditor
           value={values.apiKeysText}
           providers={values.apiKeyProviders}
+          names={values.apiKeyNames}
           disabled={disabled}
-          onChange={(apiKeysText, apiKeyProviders) => onChange({ apiKeysText, apiKeyProviders })}
+          onChange={(apiKeysText, apiKeyProviders, apiKeyNames) =>
+            onChange({ apiKeysText, apiKeyProviders, apiKeyNames })
+          }
         />
       </FieldGroup>
     </FieldAnchor>

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { SelectionCheckbox } from '@/components/ui/SelectionCheckbox';
 import { useAuthStore, useConfigStore, useNotificationStore } from '@/stores';
-import { apiKeyNameFingerprint, readApiKeyNames, saveApiKeyName } from '../../apiKeyNames';
+import { areApiKeyNamesEqual, getApiKeyName, pickApiKeyNames } from '@/services/api/apiKeyNames';
 import {
   buildApiKeyProviderOptions,
   normalizeApiKeyProviderId,
@@ -22,23 +22,28 @@ interface ApiKeysCardEditorProps {
   value: string;
   /** Provider allow-lists keyed by API key; keys without an entry may use every provider. */
   providers: Record<string, string[]>;
+  /** Display names keyed by API key; saved with the configuration, not in this editor. */
+  names: Record<string, string>;
   disabled?: boolean;
-  onChange: (nextValue: string, nextProviders: Record<string, string[]>) => void;
+  onChange: (
+    nextValue: string,
+    nextProviders: Record<string, string[]>,
+    nextNames: Record<string, string>
+  ) => void;
 }
 
 export const ApiKeysCardEditor = memo(function ApiKeysCardEditor(props: ApiKeysCardEditorProps) {
   const apiBase = useAuthStore((state) => state.apiBase);
-  return <ScopedApiKeysCardEditor key={apiBase} {...props} apiBase={apiBase} />;
+  return <ScopedApiKeysCardEditor key={apiBase} {...props} />;
 });
 
 function ScopedApiKeysCardEditor({
   value,
   providers,
+  names,
   disabled,
   onChange,
-  apiBase,
-}: ApiKeysCardEditorProps & { apiBase: string }) {
-  const [names, setNames] = useState(() => readApiKeyNames(apiBase));
+}: ApiKeysCardEditorProps) {
   const [nameValue, setNameValue] = useState('');
   const { t } = useTranslation();
   const showNotification = useNotificationStore((state) => state.showNotification);
@@ -49,10 +54,6 @@ function ScopedApiKeysCardEditor({
         .map((key) => key.trim())
         .filter(Boolean),
     [value]
-  );
-  const nameFingerprints = useMemo(
-    () => apiKeys.map((key) => apiKeyNameFingerprint(apiBase, key)),
-    [apiBase, apiKeys]
   );
   const [apiKeyIds, setApiKeyIds] = useState(() => apiKeys.map(() => makeClientId()));
   const renderApiKeyIds = useMemo(() => {
@@ -99,9 +100,7 @@ function ScopedApiKeysCardEditor({
 
   const openEditModal = (apiKeyId: string) => {
     const editingIndex = renderApiKeyIds.findIndex((id) => id === apiKeyId);
-    const latestNames = readApiKeyNames(apiBase);
-    setNames(latestNames);
-    setNameValue(latestNames[nameFingerprints[editingIndex]] ?? '');
+    setNameValue(getApiKeyName(names, apiKeys[editingIndex] ?? ''));
     setEditingApiKeyId(apiKeyId);
     setInputValue(apiKeys[editingIndex] ?? '');
     setProviderSelection(providers[apiKeys[editingIndex] ?? ''] ?? []);
@@ -117,8 +116,12 @@ function ScopedApiKeysCardEditor({
     setFormError('');
   };
 
-  const updateApiKeys = (nextKeys: string[], nextProviders: Record<string, string[]>) => {
-    onChange(nextKeys.join('\n'), nextProviders);
+  const updateApiKeys = (
+    nextKeys: string[],
+    nextProviders: Record<string, string[]>,
+    nextNames: Record<string, string>
+  ) => {
+    onChange(nextKeys.join('\n'), nextProviders, nextNames);
   };
 
   const handleDelete = (apiKeyId: string) => {
@@ -129,7 +132,8 @@ function ScopedApiKeysCardEditor({
     setApiKeyIds(renderApiKeyIds.filter((id) => id !== apiKeyId));
     updateApiKeys(
       nextKeys,
-      nextKeys.includes(deletedKey) ? providers : remapApiKeyProviders(providers, deletedKey, null)
+      nextKeys.includes(deletedKey) ? providers : remapApiKeyProviders(providers, deletedKey, null),
+      pickApiKeyNames(names, nextKeys)
     );
   };
 
@@ -166,12 +170,8 @@ function ScopedApiKeysCardEditor({
       editingApiKeyId === null
         ? [...apiKeys, trimmed]
         : apiKeys.map((key, idx) => (idx === editingIndex ? trimmed : key));
-    if (!saveApiKeyName(apiBase, trimmed, nameValue)) {
-      setFormError(t('config_management.visual.api_keys.name_save_error'));
-      return;
-    }
-    setNames(readApiKeyNames(apiBase));
-    // Retain old fingerprints: configuration edits can still be discarded or fail to save.
+    // A renamed key carries its name: the new key takes the name field, the old key drops out.
+    const nextNames = pickApiKeyNames({ ...names, [trimmed]: nameValue }, nextKeys);
     if (editingApiKeyId === null) {
       setApiKeyIds([...renderApiKeyIds, makeClientId()]);
     }
@@ -183,9 +183,10 @@ function ScopedApiKeysCardEditor({
     );
     if (
       nextKeys.join('\n') !== apiKeys.join('\n') ||
-      JSON.stringify(nextProviders) !== JSON.stringify(providers)
+      JSON.stringify(nextProviders) !== JSON.stringify(providers) ||
+      !areApiKeyNamesEqual(nextNames, names)
     ) {
-      updateApiKeys(nextKeys, nextProviders);
+      updateApiKeys(nextKeys, nextProviders, nextNames);
     }
     closeModal();
   };
@@ -221,8 +222,7 @@ function ScopedApiKeysCardEditor({
               <div className="item-meta">
                 <div className="pill">#{index + 1}</div>
                 <div className="item-title">
-                  {names[nameFingerprints[index]] ??
-                    t('config_management.visual.api_keys.input_label')}
+                  {getApiKeyName(names, key) || t('config_management.visual.api_keys.input_label')}
                 </div>
                 <div className="item-subtitle">{maskApiKey(String(key || ''))}</div>
                 <div className="item-subtitle">

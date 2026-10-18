@@ -1,49 +1,22 @@
-import type { RecentRequestBucket } from '@/utils/recentRequests';
+/**
+ * UI-only types for the usage dashboard. Backend data shapes live in `@/types/usage`.
+ */
 
-/** 每个统计桶覆盖的分钟数（后端固定为 10 分钟 × 20 桶） */
-export const TRAFFIC_BUCKET_MINUTES = 10;
+import type { UsageRange } from '@/types/usage';
 
-/** 聚合后的整体流量窗口 */
-export interface TrafficWindow {
-  buckets: RecentRequestBucket[];
-  totalSuccess: number;
-  totalFailure: number;
-  total: number;
-  /** 0–100；窗口内无请求时为 null */
-  successRate: number | null;
-  /** 单桶最大请求数，用于图表纵轴 */
-  peakTotal: number;
-  /** 峰值所在桶下标，-1 表示无数据 */
-  peakIndex: number;
-  /** 窗口跨度（分钟） */
-  windowMinutes: number;
-}
+export const USAGE_RANGES: readonly UsageRange[] = ['24h', '7d', '30d', '90d'];
 
-/** 单个供应商的流量切片 */
-export interface ProviderTraffic {
-  id: string;
-  credentials: number;
-  success: number;
-  failure: number;
-  total: number;
-  successRate: number | null;
-  buckets: RecentRequestBucket[];
-}
+/** What the usage-over-time chart plots: stacked token kinds, request counts, or cost. */
+export type UsageMetric = 'tokens' | 'requests' | 'cost';
 
-/** 凭证健康度 */
-export interface CredentialHealth {
-  total: number;
-  active: number;
-  disabled: number;
-  unavailable: number;
-  /** 按供应商类型分组的凭证数，按数量降序 */
-  byType: Array<{ type: string; count: number }>;
-}
+export const USAGE_METRICS: readonly UsageMetric[] = ['tokens', 'requests', 'cost'];
 
-/** 顶部计数卡片的原始数值 */
-export interface DashboardCounts {
-  managementKeys: number | null;
-  providerKeys: number | null;
-  credentials: number | null;
-  models: number | null;
+export type KeySortColumn =
+  'name' | 'requests' | 'failed' | 'input' | 'cached' | 'output' | 'cost' | 'lastUsed';
+
+export type SortDirection = 'asc' | 'desc';
+
+export interface KeySort {
+  column: KeySortColumn;
+  direction: SortDirection;
 }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { parse as parseYaml, parseDocument } from 'yaml';
-import { useConfigStore, useNotificationStore } from '@/stores';
+import { useAuthStore, useConfigStore, useNotificationStore } from '@/stores';
 import { configFileApi } from '@/services/api/configFile';
 import { apiClient } from '@/services/api/client';
 import {
@@ -14,7 +14,38 @@ import {
   rebaseConfigDraft,
   type ConfigPatchPlan,
 } from '@/services/api/configPatch';
+import { apiKeyNamesApi, areApiKeyNamesEqual, pickApiKeyNames } from '@/services/api/apiKeyNames';
+import type { VisualApiKeyNames } from '@/types/visualConfig';
 import type { ConfigEditorMode } from '../constants';
+import { clearLegacyApiKeyNames, migrateLegacyApiKeyNames } from '../apiKeyNames';
+
+/** Client keys as the YAML stores them; names are only ever kept for these. */
+export function readConfiguredApiKeys(yamlContent: string): string[] {
+  try {
+    const parsed: unknown = parseYaml(yamlContent);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return [];
+    const access: unknown = (parsed as Record<string, unknown>).access;
+    if (!access || typeof access !== 'object' || Array.isArray(access)) return [];
+    const keys: unknown = (access as Record<string, unknown>)['api-keys'];
+    if (!Array.isArray(keys)) return [];
+    return keys.flatMap((key) => {
+      const trimmed = typeof key === 'string' ? key.trim() : '';
+      return trimmed ? [trimmed] : [];
+    });
+  } catch {
+    return [];
+  }
+}
+
+/** Names a YAML write would keep, or null when the server already holds exactly those. */
+function apiKeyNamesToSave(
+  yamlContent: string,
+  draft: Record<string, string>,
+  server: Record<string, string>
+): Record<string, string> | null {
+  const names = pickApiKeyNames(draft, readConfiguredApiKeys(yamlContent));
+  return areApiKeyNamesEqual(names, server) ? null : names;
+}
 
 export function readCommercialModeFromYaml(yamlContent: string): boolean {
   try {
@@ -60,7 +91,12 @@ export type UseConfigDocumentArgs = {
   mode: ConfigEditorMode;
   visualDirty: boolean;
   visualParseError: string | null;
-  loadVisualValuesFromYaml: (yaml: string) => { ok: true } | { ok: false; error: string };
+  /** Names are not YAML, so they travel beside the document and are saved after it. */
+  apiKeyNames: Record<string, string>;
+  loadVisualValuesFromYaml: (
+    yaml: string,
+    apiKeyNames?: VisualApiKeyNames
+  ) => { ok: true } | { ok: false; error: string };
   rebaseVisualValuesFromYaml: (
     serverYaml: string,
     draftYaml: string
@@ -94,6 +130,7 @@ export function useConfigDocument({
   mode,
   visualDirty,
   visualParseError,
+  apiKeyNames,
   loadVisualValuesFromYaml,
   rebaseVisualValuesFromYaml,
   applyVisualChangesToYaml,
@@ -115,6 +152,8 @@ export function useConfigDocument({
   const [previewServerYaml, setPreviewServerYaml] = useState('');
   const [previewMode, setPreviewMode] = useState<ConfigEditorMode>('visual');
   const [previewPlan, setPreviewPlan] = useState<ConfigPatchPlan | null>(null);
+  // Last names read from or written to the server; discard and no-op saves compare against it.
+  const [serverApiKeyNames, setServerApiKeyNames] = useState<Record<string, string>>({});
   const previewRevision = useRef<number | null>(null);
   const operationId = useRef(0);
 
@@ -135,8 +174,15 @@ export function useConfigDocument({
     setLoading(true);
     setError('');
     try {
-      const data = await configFileApi.fetchConfigYaml();
+      // A failed names read fails the whole load: an empty fallback would later erase saved names.
+      const [data, savedNames] = await Promise.all([
+        configFileApi.fetchConfigYaml(),
+        apiKeyNamesApi.list(),
+      ]);
       if (!operation.isCurrent()) return;
+      const apiKeys = readConfiguredApiKeys(data);
+      const names = pickApiKeyNames(savedNames, apiKeys);
+      const draftNames = migrateLegacyApiKeyNames(useAuthStore.getState().apiBase, apiKeys, names);
       setContent(data);
       setRecoveryRequired(false);
       setSourceDirty(false);
@@ -144,7 +190,8 @@ export function useConfigDocument({
       setServerYaml(data);
       setMergedYaml(data);
       setPreviewServerYaml(data);
-      loadVisualValuesFromYaml(data);
+      setServerApiKeyNames(names);
+      loadVisualValuesFromYaml(data, { server: names, draft: draftNames });
     } catch (err: unknown) {
       if (!operation.isCurrent()) return;
       const message = err instanceof Error ? err.message : t('notification.refresh_failed');
@@ -204,11 +251,17 @@ export function useConfigDocument({
         setServerYaml(nextServerYaml);
         setMergedYaml(nextMergedYaml);
 
-        if (nextPlan ? !hasConfigPatchChanges(nextPlan) : nextServerYaml === nextMergedYaml) {
+        const yamlUnchanged = nextPlan
+          ? !hasConfigPatchChanges(nextPlan)
+          : nextServerYaml === nextMergedYaml;
+        if (yamlUnchanged && !apiKeyNamesToSave(nextMergedYaml, apiKeyNames, serverApiKeyNames)) {
           setSourceDirty(false);
           setDiffModalOpen(false);
           setContent(latestServerYaml);
-          loadVisualValuesFromYaml(latestServerYaml);
+          loadVisualValuesFromYaml(latestServerYaml, {
+            server: serverApiKeyNames,
+            draft: serverApiKeyNames,
+          });
           showNotification(t('config_management.diff.no_changes'), 'info');
         }
         return;
@@ -220,6 +273,8 @@ export function useConfigDocument({
       const trustedProxiesChanged = hasTrustedProxiesChange(latestServerYaml, mergedYaml);
 
       if (previewMode === 'visual' && !previewPlan) return;
+      const savedKeys = readConfiguredApiKeys(mergedYaml);
+      const namesToSave = apiKeyNamesToSave(mergedYaml, apiKeyNames, serverApiKeyNames);
       writeAttempted = true;
       if (previewMode === 'visual' && previewPlan) {
         await applyConfigPatch(previewPlan, operation.revision);
@@ -227,6 +282,12 @@ export function useConfigDocument({
         await configFileApi.saveConfigYaml(mergedYaml);
       }
       if (!operation.isCurrent()) return;
+      // Names follow the keys: written only after the YAML that defines those keys has saved.
+      if (namesToSave) await apiKeyNamesApi.replace(namesToSave);
+      if (!operation.isCurrent()) return;
+      clearLegacyApiKeyNames(useAuthStore.getState().apiBase, savedKeys);
+      const savedNames = namesToSave ?? serverApiKeyNames;
+      setServerApiKeyNames(savedNames);
       useConfigStore.getState().clearCache();
       const latestContent = await configFileApi.fetchConfigYaml();
       if (!operation.isCurrent()) return;
@@ -237,7 +298,7 @@ export function useConfigDocument({
       setServerYaml(latestContent);
       setMergedYaml(latestContent);
       setPreviewServerYaml(latestContent);
-      loadVisualValuesFromYaml(latestContent);
+      loadVisualValuesFromYaml(latestContent, { server: savedNames, draft: savedNames });
 
       // Keep the global config store in sync so sidebar / other pages reflect YAML changes immediately.
       try {
@@ -318,6 +379,7 @@ export function useConfigDocument({
       if (operation.isCurrent()) setSaving(false);
     }
   }, [
+    apiKeyNames,
     applyVisualChangesToYaml,
     beginOperation,
     diffModalOpen,
@@ -327,6 +389,7 @@ export function useConfigDocument({
     previewMode,
     previewPlan,
     recoverVisualDraft,
+    serverApiKeyNames,
     sourceDirty,
     previewServerYaml,
     showNotification,
@@ -386,13 +449,19 @@ export function useConfigDocument({
 
       const nextPlan =
         mode === 'visual' ? buildConfigPatch(latestServerYaml, nextMergedYaml) : null;
-      if (nextPlan ? !hasConfigPatchChanges(nextPlan) : diffOriginal === nextMergedYaml) {
+      const yamlUnchanged = nextPlan
+        ? !hasConfigPatchChanges(nextPlan)
+        : diffOriginal === nextMergedYaml;
+      if (yamlUnchanged && !apiKeyNamesToSave(nextMergedYaml, apiKeyNames, serverApiKeyNames)) {
         setSourceDirty(false);
         setContent(latestServerYaml);
         setServerYaml(latestServerYaml);
         setMergedYaml(nextMergedYaml);
         setPreviewServerYaml(latestServerYaml);
-        loadVisualValuesFromYaml(latestServerYaml);
+        loadVisualValuesFromYaml(latestServerYaml, {
+          server: serverApiKeyNames,
+          draft: serverApiKeyNames,
+        });
         showNotification(t('config_management.diff.no_changes'), 'info');
         return;
       }
@@ -417,6 +486,7 @@ export function useConfigDocument({
       if (operation.isCurrent()) setSaving(false);
     }
   }, [
+    apiKeyNames,
     applyVisualChangesToYaml,
     beginOperation,
     diffModalOpen,
@@ -425,6 +495,7 @@ export function useConfigDocument({
     sourceDirty,
     recoveryRequired,
     recoverVisualDraft,
+    serverApiKeyNames,
     loadVisualValuesFromYaml,
     mode,
     showNotification,
@@ -481,7 +552,10 @@ export function useConfigDocument({
         setDiffModalOpen(false);
         setServerYaml(previewServerYaml);
         setMergedYaml(previewServerYaml);
-        loadVisualValuesFromYaml(previewServerYaml);
+        loadVisualValuesFromYaml(previewServerYaml, {
+          server: serverApiKeyNames,
+          draft: serverApiKeyNames,
+        });
       },
     });
   }, [
@@ -490,6 +564,7 @@ export function useConfigDocument({
     loadVisualValuesFromYaml,
     previewServerYaml,
     recoveryRequired,
+    serverApiKeyNames,
     showConfirmation,
     t,
   ]);

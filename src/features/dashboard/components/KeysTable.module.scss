@@ -1,0 +1,202 @@
+.hint {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.table {
+  min-width: 960px;
+}
+
+.empty {
+  margin: 0;
+  padding: 20px 16px;
+  font-size: 13px;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+.sortActive {
+  color: var(--text-primary);
+}
+
+.sortIcon {
+  opacity: 0.35;
+  transition: transform var(--dur-hover) var(--ease-out-strong);
+}
+
+.sortActive .sortIcon {
+  opacity: 1;
+}
+
+.sortIconAsc {
+  transform: rotate(180deg);
+}
+
+.row {
+  cursor: pointer;
+
+  &:hover > td {
+    background: var(--bg-tertiary);
+  }
+}
+
+.open > td {
+  background: var(--bg-secondary);
+}
+
+.idle {
+  opacity: 0.5;
+}
+
+.identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.names {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.masked {
+  font-family: $font-mono;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  overflow-wrap: anywhere;
+}
+
+.removed {
+  display: inline-flex;
+  padding: 0 7px;
+  border: 1px solid var(--warning-border);
+  border-radius: 999px;
+  background: var(--warning-bg);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--warning-text);
+  white-space: nowrap;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.failed {
+  color: var(--viz-failure);
+}
+
+.primary {
+  display: block;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.split {
+  display: block;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.shareTrack {
+  display: block;
+  width: 100%;
+  min-width: 56px;
+  height: 4px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background: var(--bg-tertiary);
+  overflow: hidden;
+}
+
+.shareFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--viz-success);
+}
+
+.never {
+  color: var(--text-quaternary);
+}
+
+.detailCell {
+  padding: 0;
+  background: var(--bg-secondary);
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 16px 46px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.detailMeta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}

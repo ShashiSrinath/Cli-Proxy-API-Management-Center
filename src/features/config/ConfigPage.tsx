@@ -104,6 +104,7 @@ export function ConfigPage() {
     mode,
     visualDirty,
     visualParseError,
+    apiKeyNames: visualValues.apiKeyNames,
     loadVisualValuesFromYaml,
     rebaseVisualValuesFromYaml,
     applyVisualChangesToYaml,

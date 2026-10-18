@@ -1,0 +1,51 @@
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+
+.source {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.openrouter {
+  border-color: color-mix(in srgb, var(--viz-success) 35%, transparent);
+  color: var(--text-secondary);
+}
+
+.override {
+  border-color: var(--amber-30);
+  background: var(--amber-10);
+  color: var(--amber-text);
+}
+
+.none {
+  border-color: var(--warning-border);
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.numbers {
+  font-family: $font-mono;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.unpriced {
+  font-size: 12px;
+  color: var(--warning-text);
+}
