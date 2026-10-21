@@ -86,6 +86,15 @@ interface SponsorKeyEntryCardProps {
 
 const emptyModel = (): ModelEntryInput => ({ name: '', alias: '' });
 
+const defaultModelsFor = (
+  definition: SponsorProviderDefinition,
+  protocol: SponsorProtocol
+): ModelEntryInput[] => {
+  const defaults =
+    protocol === definition.defaultProtocol ? definition.getDefaultModels?.() : undefined;
+  return defaults?.length ? defaults : [emptyModel()];
+};
+
 const emptySponsorKeyEntry = (
   definition: SponsorProviderDefinition,
   protocol: SponsorProtocol = definition.defaultProtocol
@@ -101,7 +110,7 @@ const emptySponsorKeyEntry = (
   runtimePolicy: readRuntimePolicy(),
   priority: undefined,
   weight: undefined,
-  models: [emptyModel()],
+  models: defaultModelsFor(definition, protocol),
 });
 
 const emptySponsorForm = (definition: SponsorProviderDefinition): ProviderEntryFormInput => ({
@@ -373,6 +382,7 @@ function SponsorKeyEntryCard({
     fallbackApiKey: entry.existingApiKey,
     apiKeyEntries: entry.protocol === 'openai' ? openaiDiscoveryEntries : undefined,
   });
+  const defaultHeaders = Object.entries(definition.getDefaultHeaders?.() ?? {});
   const protocolOptions = definition.protocols
     .filter((protocol) => protocol === entry.protocol || !usedProtocols.has(protocol))
     .map((protocol) => ({
@@ -432,22 +442,27 @@ function SponsorKeyEntryCard({
 
       {expanded ? (
         <div className={styles.entryCardBody}>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor={`${formId}-group-${index}-protocol`}>
-              {t('providersPage.sponsor.protocol')}
-            </label>
-            <Select
-              id={`${formId}-group-${index}-protocol`}
-              value={entry.protocol}
-              options={protocolOptions}
-              onChange={(value) =>
-                updateEntry({ protocol: value as SponsorProtocol, models: [emptyModel()] })
-              }
-              disabled={mutating}
-              ariaLabel={t('providersPage.sponsor.protocol')}
-            />
-            <span className={styles.labelHint}>{t('providersPage.sponsor.protocolHint')}</span>
-          </div>
+          {definition.protocols.length > 1 ? (
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor={`${formId}-group-${index}-protocol`}>
+                {t('providersPage.sponsor.protocol')}
+              </label>
+              <Select
+                id={`${formId}-group-${index}-protocol`}
+                value={entry.protocol}
+                options={protocolOptions}
+                onChange={(value) =>
+                  updateEntry({
+                    protocol: value as SponsorProtocol,
+                    models: defaultModelsFor(definition, value as SponsorProtocol),
+                  })
+                }
+                disabled={mutating}
+                ariaLabel={t('providersPage.sponsor.protocol')}
+              />
+              <span className={styles.labelHint}>{t('providersPage.sponsor.protocolHint')}</span>
+            </div>
+          ) : null}
 
           {definition.baseUrlOptions.length > 1 ? (
             <div className={styles.field}>
@@ -498,6 +513,19 @@ function SponsorKeyEntryCard({
             </span>
             <span className={styles.sponsorProtocolUrl}>{endpointUrl}</span>
           </div>
+
+          {defaultHeaders.length ? (
+            <div className={styles.sponsorProtocolCard}>
+              <span className={styles.sponsorProtocolName}>
+                {t('providersPage.sponsor.defaultHeaders')}
+              </span>
+              {defaultHeaders.map(([key, value]) => (
+                <span key={key} className={styles.sponsorProtocolUrl}>
+                  {key}: {value}
+                </span>
+              ))}
+            </div>
+          ) : null}
 
           <div className={styles.field}>
             <label className={styles.label} htmlFor={`${formId}-group-${index}-api-key`}>
@@ -882,15 +910,17 @@ export function SponsorProviderForm({
             onRemove={() => removeEntry(index)}
           />
         ))}
-        <button
-          type="button"
-          className={styles.addBtn}
-          disabled={mutating || !missingProtocols.length}
-          onClick={addEntry}
-        >
-          <IconPlus size={12} />
-          <span>{t('providersPage.sponsor.addGroupedKey')}</span>
-        </button>
+        {definition.protocols.length > 1 ? (
+          <button
+            type="button"
+            className={styles.addBtn}
+            disabled={mutating || !missingProtocols.length}
+            onClick={addEntry}
+          >
+            <IconPlus size={12} />
+            <span>{t('providersPage.sponsor.addGroupedKey')}</span>
+          </button>
+        ) : null}
       </div>
 
       {error ? <div className={styles.errorBox}>{error}</div> : null}

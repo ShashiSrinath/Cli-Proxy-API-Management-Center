@@ -732,7 +732,8 @@
     "stale_request": "連線或憑證已變更，請重試。",
     "fiveHour": "5 小時額度",
     "weekly": "每週額度",
-    "credits": "每月額度",
+    "monthly": "每月額度",
+    "credits": "額度餘額",
     "credits_remaining": "剩餘 {{amount}}",
     "unknown": "未知",
     "remaining": "剩餘 {{percent}}%"
@@ -2141,7 +2142,10 @@
       "apikeyFun": "APIKEY.FUN",
       "fennoAI": "FennoAI",
       "qiniuCloud": "七牛雲",
-      "kimi": "Kimi"
+      "kimi": "Kimi",
+      "openDesign": "OpenDesign",
+      "commandCode": "Command Code",
+      "opencodeGo": "OpenCode Go"
     },
     "table": {
       "key": "金鑰",
@@ -2163,6 +2167,7 @@
       "description": "在 {{route}} 下管理資源"
     },
     "sponsor": {
+      "defaultHeaders": "請求標頭",
       "protocolSummary": "Anthropic / OpenAI / Gemini / Codex API (Responses)",
       "detailHint": "{{provider}} 會按協議分別寫入對應的 API Key 設定,此處只做聚合管理。",
       "registerLink": "點此註冊",

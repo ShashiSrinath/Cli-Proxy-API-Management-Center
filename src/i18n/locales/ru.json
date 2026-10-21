@@ -737,7 +737,8 @@
     "stale_request": "Подключение или учётные данные изменились. Повторите запрос.",
     "fiveHour": "Лимит на 5 часов",
     "weekly": "Недельный лимит",
-    "credits": "Месячные кредиты",
+    "monthly": "Месячные кредиты",
+    "credits": "Баланс кредитов",
     "credits_remaining": "Осталось {{amount}}",
     "unknown": "Неизвестно",
     "remaining": "Осталось {{percent}}%"
@@ -2111,7 +2112,10 @@
       "apikeyFun": "APIKEY.FUN",
       "fennoAI": "FennoAI",
       "qiniuCloud": "Qiniu Cloud",
-      "kimi": "Kimi"
+      "kimi": "Kimi",
+      "openDesign": "OpenDesign",
+      "commandCode": "Command Code",
+      "opencodeGo": "OpenCode Go"
     },
     "table": {
       "key": "Ключ",
@@ -2133,6 +2137,7 @@
       "description": "Управление ресурсами {{route}}"
     },
     "sponsor": {
+      "defaultHeaders": "Заголовки запроса",
       "protocolSummary": "Anthropic / OpenAI / Gemini / Codex API (Responses)",
       "detailHint": "{{provider}} сохраняется в соответствующие конфигурации API key по протоколам; здесь они управляются вместе.",
       "registerLink": "Зарегистрироваться",

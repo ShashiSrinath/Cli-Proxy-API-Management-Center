@@ -34,7 +34,39 @@ import {
   getKimiProtocolUrls,
   resolveKimiBaseUrl,
 } from './kimi';
+import {
+  OPEN_DESIGN_BASE_URL_OPTIONS,
+  OPEN_DESIGN_DISPLAY_NAME,
+  OPEN_DESIGN_PROTOCOL_LABELS,
+  OPEN_DESIGN_PROVIDER_NAME,
+  OPEN_DESIGN_SIGNUP_URL,
+  getOpenDesignDefaultModels,
+  getOpenDesignProtocolUrls,
+  resolveOpenDesignBaseUrl,
+} from './openDesign';
+import {
+  COMMAND_CODE_BASE_URL_OPTIONS,
+  COMMAND_CODE_DISPLAY_NAME,
+  COMMAND_CODE_PROTOCOL_LABELS,
+  COMMAND_CODE_PROVIDER_NAME,
+  COMMAND_CODE_SIGNUP_URL,
+  getCommandCodeDefaultModels,
+  getCommandCodeProtocolUrls,
+  resolveCommandCodeBaseUrl,
+} from './commandCode';
+import {
+  OPENCODE_GO_BASE_URL_OPTIONS,
+  OPENCODE_GO_DISPLAY_NAME,
+  OPENCODE_GO_PROTOCOL_LABELS,
+  OPENCODE_GO_PROVIDER_NAME,
+  OPENCODE_GO_SIGNUP_URL,
+  getOpencodeGoDefaultHeaders,
+  getOpencodeGoDefaultModels,
+  getOpencodeGoProtocolUrls,
+  resolveOpencodeGoBaseUrl,
+} from './opencodeGo';
 import type {
+  ModelEntryInput,
   ProviderBrand,
   SponsorProtocol,
   SponsorProviderBrand,
@@ -69,6 +101,10 @@ export interface SponsorProviderDefinition {
   defaultProtocol: SponsorProtocol;
   baseUrlOptions: readonly SponsorBaseUrlOption[];
   supportsUsageCheck: boolean;
+  /** Models pre-filled for a new key on the default protocol. */
+  getDefaultModels?: () => ModelEntryInput[];
+  /** Headers written to a newly created OpenAI entry; existing entries keep their own. */
+  getDefaultHeaders?: () => Record<string, string>;
   resolveBaseUrl: (value: string | undefined | null) => string;
   getProtocolUrls: (value: string | undefined | null) => SponsorProtocolUrls;
 }
@@ -126,13 +162,59 @@ const SPONSOR_DEFINITIONS: Record<SponsorProviderBrand, SponsorProviderDefinitio
     resolveBaseUrl: resolveKimiBaseUrl,
     getProtocolUrls: getKimiProtocolUrls,
   },
+  openDesign: {
+    brand: 'openDesign',
+    displayName: OPEN_DESIGN_DISPLAY_NAME,
+    providerName: OPEN_DESIGN_PROVIDER_NAME,
+    affiliateUrl: OPEN_DESIGN_SIGNUP_URL,
+    protocols: ['openai'],
+    protocolLabels: OPEN_DESIGN_PROTOCOL_LABELS,
+    defaultProtocol: 'openai',
+    baseUrlOptions: OPEN_DESIGN_BASE_URL_OPTIONS,
+    supportsUsageCheck: false,
+    getDefaultModels: getOpenDesignDefaultModels,
+    resolveBaseUrl: resolveOpenDesignBaseUrl,
+    getProtocolUrls: getOpenDesignProtocolUrls,
+  },
+  commandCode: {
+    brand: 'commandCode',
+    displayName: COMMAND_CODE_DISPLAY_NAME,
+    providerName: COMMAND_CODE_PROVIDER_NAME,
+    affiliateUrl: COMMAND_CODE_SIGNUP_URL,
+    protocols: ['openai'],
+    protocolLabels: COMMAND_CODE_PROTOCOL_LABELS,
+    defaultProtocol: 'openai',
+    baseUrlOptions: COMMAND_CODE_BASE_URL_OPTIONS,
+    supportsUsageCheck: false,
+    getDefaultModels: getCommandCodeDefaultModels,
+    resolveBaseUrl: resolveCommandCodeBaseUrl,
+    getProtocolUrls: getCommandCodeProtocolUrls,
+  },
+  opencodeGo: {
+    brand: 'opencodeGo',
+    displayName: OPENCODE_GO_DISPLAY_NAME,
+    providerName: OPENCODE_GO_PROVIDER_NAME,
+    affiliateUrl: OPENCODE_GO_SIGNUP_URL,
+    protocols: ['openai'],
+    protocolLabels: OPENCODE_GO_PROTOCOL_LABELS,
+    defaultProtocol: 'openai',
+    baseUrlOptions: OPENCODE_GO_BASE_URL_OPTIONS,
+    supportsUsageCheck: false,
+    getDefaultModels: getOpencodeGoDefaultModels,
+    getDefaultHeaders: getOpencodeGoDefaultHeaders,
+    resolveBaseUrl: resolveOpencodeGoBaseUrl,
+    getProtocolUrls: getOpencodeGoProtocolUrls,
+  },
 };
 
 export const isMultiProtocolSponsorBrand = (brand: ProviderBrand): brand is SponsorProviderBrand =>
   brand === 'apikeyFun' ||
   brand === 'fennoAI' ||
   brand === 'qiniuCloud' ||
-  brand === 'kimi';
+  brand === 'kimi' ||
+  brand === 'openDesign' ||
+  brand === 'commandCode' ||
+  brand === 'opencodeGo';
 
 export type SponsorAggregationConflict = 'multiple-configs' | 'multiple-openai-keys';
 

@@ -250,7 +250,13 @@ export function ProviderSheet({
                   ? '/ai-providers/qiniu'
                   : state.brand === 'kimi'
                     ? '/ai-providers/kimi'
-                    : `/ai-providers/${state.brand}`,
+                    : state.brand === 'openDesign'
+                      ? '/ai-providers/opendesign'
+                      : state.brand === 'commandCode'
+                        ? '/ai-providers/commandcode'
+                        : state.brand === 'opencodeGo'
+                          ? '/ai-providers/opencode-go'
+                          : `/ai-providers/${state.brand}`,
       })}
       footer={footer}
       closeDisabled={submitting}

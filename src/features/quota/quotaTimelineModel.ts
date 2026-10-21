@@ -316,8 +316,12 @@ interface OpencodeGoWindowLike {
   resetAt?: number;
 }
 
-/** Command Code window lengths are fixed by its plan: 5h and weekly. */
-const COMMAND_CODE_PERIOD_HOURS: Record<string, number> = { fiveHour: 5, weekly: 168 };
+/** Command Code window lengths are fixed by its plan: 5h, weekly and the monthly billing period. */
+const COMMAND_CODE_PERIOD_HOURS: Record<string, number> = {
+  fiveHour: 5,
+  weekly: 168,
+  monthly: 720,
+};
 
 interface CommandCodeWindowLike {
   id: string;

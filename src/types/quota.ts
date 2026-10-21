@@ -321,9 +321,12 @@ export interface OpencodeGoQuotaState {
   errorStatus?: number;
 }
 
-/** One spend window from Command Code's billing credits endpoint (fiveHour = 5h). */
+/**
+ * One Command Code spend window: fiveHour/weekly come from the billing credits endpoint;
+ * monthly is the plan's billing period (subscription + usage summary endpoints).
+ */
 export interface CommandCodeQuotaWindow {
-  id: 'fiveHour' | 'weekly';
+  id: 'fiveHour' | 'weekly' | 'monthly';
   usedPercent: number | null;
   /** Reset instant as Unix seconds. */
   resetAt?: number;

@@ -7,6 +7,8 @@ import type { AuthFileItem } from '@/types';
 import type { ApiCallRequest, ApiCallResult } from '@/services/api/apiCall';
 import {
   COMMAND_CODE_CREDITS_URL,
+  commandCodeAccountUrls,
+  parseCommandCodeMonthlyWindow,
   parseCommandCodeQuotaPayload,
 } from '@/services/api/commandCodeQuota';
 import { CommandCodeQuotaBody } from '@/features/quota/providers/commandcode/CommandCodeQuotaBody';
@@ -40,6 +42,28 @@ const creditsResponse = {
   },
   sandboxAccess: false,
   sandboxMinutes: null,
+};
+
+// Captured from /alpha/billing/subscriptions and /alpha/usage/summary (identifiers removed).
+const subscriptionResponse = {
+  success: true,
+  data: {
+    status: 'active',
+    currentPeriodStart: '2026-10-05T22:08:39.000Z',
+    currentPeriodEnd: '2026-11-05T22:08:39.000Z',
+    planId: 'individual-goat',
+  },
+};
+const usageSummaryResponse = {
+  totalCredits: 69.9930246971,
+  totalMonthlyCredits: 69.9930246971,
+  totalPurchasedCredits: 0,
+  periodBasis: 'billing-period',
+  periodStart: '2026-10-05T22:08:39.000Z',
+};
+const lowCreditsResponse = {
+  ...creditsResponse,
+  credits: { ...creditsResponse.credits, monthlyCredits: 0.0557380141 },
 };
 
 const probe = {
@@ -85,6 +109,7 @@ describe('Command Code quota', () => {
         'stale_request',
         'fiveHour',
         'weekly',
+        'monthly',
         'credits',
         'credits_remaining',
         'unknown',
@@ -171,9 +196,72 @@ describe('Command Code quota', () => {
     const data = await fetchQuota(file);
     expect(data.windows).toHaveLength(2);
     expect(data.creditsRemaining).toBeCloseTo(69.9177663613, 10);
+    const urls = commandCodeAccountUrls(probe.url);
     expect(requests).toEqual([
       { authIndex: 'idx-1', method: 'GET', url: probe.url, header: probe.headers },
+      { authIndex: 'idx-1', method: 'GET', url: urls.subscriptions, header: probe.headers },
+      { authIndex: 'idx-1', method: 'GET', url: urls.usageSummary, header: probe.headers },
     ]);
+  });
+
+  test('adds the monthly billing-period window from subscription and usage summary', async () => {
+    const urls = commandCodeAccountUrls(probe.url);
+    expect(urls).toEqual({
+      subscriptions: 'https://api.commandcode.ai/alpha/billing/subscriptions',
+      usageSummary: 'https://api.commandcode.ai/alpha/usage/summary',
+    });
+    const bodies: Record<string, unknown> = {
+      [probe.url]: lowCreditsResponse,
+      [urls.subscriptions]: subscriptionResponse,
+      [urls.usageSummary]: usageSummaryResponse,
+    };
+    const fetchQuota = createCommandCodeQuotaFetcher({
+      request: async (payload) =>
+        ({ statusCode: 200, header: {}, bodyText: '', body: bodies[payload.url] }) as ApiCallResult,
+      captureCurrent: () => () => true,
+    });
+    const data = await fetchQuota(file);
+    const monthly = data.windows.find((window) => window.id === 'monthly')!;
+    expect(monthly.resetAt).toBe(Date.parse('2026-11-05T22:08:39.000Z') / 1000);
+    expect(monthly.usedPercent).toBeCloseTo(
+      (69.9930246971 / (69.9930246971 + 0.0557380141)) * 100,
+      8
+    );
+
+    const quota = COMMAND_CODE_CONFIG.buildSuccessState(data);
+    const markup = renderToStaticMarkup(createElement(CommandCodeQuotaBody, { quota, classes }));
+    expect(markup).toContain(i18n.t('commandcode_quota.monthly'));
+    expect(markup.match(/role="meter"/g)).toHaveLength(3);
+    expect(markup).toContain(i18n.t('commandcode_quota.credits_remaining', { amount: '$0.06' }));
+    expect(collectQuotaRowInstants('commandcode', quota).map((i) => i.rowId)).toContain('monthly');
+  });
+
+  test('keeps the credits card when the account endpoints fail or are partial', async () => {
+    const fetchQuota = createCommandCodeQuotaFetcher({
+      request: async (payload) => {
+        if (payload.url === probe.url) {
+          return {
+            statusCode: 200,
+            header: {},
+            bodyText: '',
+            body: creditsResponse,
+          } as ApiCallResult;
+        }
+        throw new Error('network');
+      },
+      captureCurrent: () => () => true,
+    });
+    expect((await fetchQuota(file)).windows.map((window) => window.id)).toEqual([
+      'fiveHour',
+      'weekly',
+    ]);
+    // Reset time alone is still worth showing; usage alone without a balance is not.
+    expect(parseCommandCodeMonthlyWindow(creditsResponse, subscriptionResponse, null)).toEqual({
+      id: 'monthly',
+      usedPercent: null,
+      resetAt: Date.parse('2026-11-05T22:08:39.000Z') / 1000,
+    });
+    expect(parseCommandCodeMonthlyWindow({}, null, usageSummaryResponse)).toBeNull();
   });
 
   test('maps failures to typed errors', async () => {

@@ -2,6 +2,8 @@ import type { AuthFileItem, CommandCodeQuotaData } from '@/types';
 import type { ApiCallRequest, ApiCallResult } from '@/services/api/apiCall';
 import {
   COMMAND_CODE_CREDITS_URL,
+  commandCodeAccountUrls,
+  parseCommandCodeMonthlyWindow,
   parseCommandCodeQuotaPayload,
 } from '@/services/api/commandCodeQuota';
 import { normalizeAuthIndex } from '@/utils/authIndex';
@@ -81,8 +83,28 @@ export function createCommandCodeQuotaFetcher(deps: CommandCodeQuotaDependencies
     if (!(response.statusCode >= 200 && response.statusCode < 300)) {
       throw new CommandCodeQuotaError('request_failed', response.statusCode);
     }
-    const quota = parseCommandCodeQuotaPayload(response.body ?? response.bodyText);
+    const creditsBody = response.body ?? response.bodyText;
+    const quota = parseCommandCodeQuotaPayload(creditsBody);
     if (!quota) throw new CommandCodeQuotaError('invalid_response');
-    return quota;
+
+    // The monthly window is best-effort: the credits card still renders without it.
+    const accountUrls = commandCodeAccountUrls(url);
+    const fetchOptional = async (accountUrl: string): Promise<unknown> => {
+      try {
+        const result = await deps.request({ authIndex, method: 'GET', url: accountUrl, header });
+        return result.statusCode >= 200 && result.statusCode < 300
+          ? (result.body ?? result.bodyText)
+          : null;
+      } catch {
+        return null;
+      }
+    };
+    const [subscription, usageSummary] = await Promise.all([
+      fetchOptional(accountUrls.subscriptions),
+      fetchOptional(accountUrls.usageSummary),
+    ]);
+    assertCurrent();
+    const monthly = parseCommandCodeMonthlyWindow(creditsBody, subscription, usageSummary);
+    return monthly ? { ...quota, windows: [...quota.windows, monthly] } : quota;
   };
 }

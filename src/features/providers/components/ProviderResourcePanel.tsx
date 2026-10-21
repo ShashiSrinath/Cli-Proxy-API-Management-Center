@@ -61,7 +61,11 @@ export function ProviderResourcePanel({
   const registrationUrl =
     group.id === 'kimi'
       ? getKimiAffiliateUrl(i18n.resolvedLanguage ?? i18n.language)
-      : group.id === 'fennoAI' || group.id === 'qiniuCloud'
+      : group.id === 'fennoAI' ||
+          group.id === 'qiniuCloud' ||
+          group.id === 'openDesign' ||
+          group.id === 'commandCode' ||
+          group.id === 'opencodeGo'
         ? getSponsorProviderDefinition(group.id).affiliateUrl
         : null;
   const registrationLabel = t(

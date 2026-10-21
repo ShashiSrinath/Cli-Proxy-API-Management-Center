@@ -25,6 +25,9 @@ import {
   openaiToResource,
   qiniuCloudToResource,
   kimiToResource,
+  openDesignToResource,
+  commandCodeToResource,
+  opencodeGoToResource,
   vertexToResource,
   xaiToResource,
 } from './adapters';
@@ -62,6 +65,9 @@ import {
   isKimiCodexProvider,
   isKimiOpenAIProvider,
 } from './kimi';
+import { buildOpenDesignRaw, isOpenDesignOpenAIProvider } from './openDesign';
+import { buildCommandCodeRaw, isCommandCodeOpenAIProvider } from './commandCode';
+import { buildOpencodeGoRaw, isOpencodeGoOpenAIProvider } from './opencodeGo';
 import { getSponsorProviderDefinition, type SponsorProtocolUrls } from './sponsorDefinitions';
 import { runSponsorMutationWithRecovery } from './sponsorMutationRecovery';
 
@@ -235,11 +241,25 @@ const buildOpenAIConfig = (
 const sponsorEntryApiKey = (entry: SponsorKeyEntryInput): string =>
   entry.apiKey.trim() || entry.existingApiKey?.trim() || '';
 
-const buildSponsorOpenAIConfig = (
+const SPONSOR_RAW_BUILDERS: Record<
+  SponsorProviderBrand,
+  (config: Config | null | undefined) => SponsorProviderRaw
+> = {
+  apikeyFun: buildApiKeyFunRaw,
+  fennoAI: buildFennoAIRaw,
+  qiniuCloud: buildQiniuCloudRaw,
+  kimi: buildKimiRaw,
+  openDesign: buildOpenDesignRaw,
+  commandCode: buildCommandCodeRaw,
+  opencodeGo: buildOpencodeGoRaw,
+};
+
+export const buildSponsorOpenAIConfig = (
   entry: SponsorKeyEntryInput,
   providerName: string,
   getProtocolUrls: (value: string | undefined | null) => SponsorProtocolUrls,
-  existing?: OpenAIProviderConfig
+  existing?: OpenAIProviderConfig,
+  defaultHeaders?: Record<string, string>
 ): OpenAIProviderConfig => {
   const urls = getProtocolUrls(entry.baseUrl);
   const models = buildModelAliases(entry.models, true);
@@ -258,6 +278,7 @@ const buildSponsorOpenAIConfig = (
 
   return {
     ...(existing ?? {}),
+    ...(existing || !defaultHeaders ? {} : { headers: defaultHeaders }),
     name: providerName,
     baseUrl: urls.openai,
     ...pickProviderBehavior(entry, 'openaiCompatibility'),
@@ -424,7 +445,10 @@ export const buildProviderGroups = (config: Config): ProviderGroup[] =>
             if (
               !isApiKeyFunOpenAIProvider(item) &&
               !isQiniuCloudOpenAIProvider(item) &&
-              !isKimiOpenAIProvider(item)
+              !isKimiOpenAIProvider(item) &&
+              !isOpenDesignOpenAIProvider(item) &&
+              !isCommandCodeOpenAIProvider(item) &&
+              !isOpencodeGoOpenAIProvider(item)
             ) {
               out.push(openaiToResource(item, index));
             }
@@ -450,6 +474,21 @@ export const buildProviderGroups = (config: Config): ProviderGroup[] =>
       }
       case 'kimi': {
         const sponsorResource = kimiToResource(buildKimiRaw(config));
+        resources = sponsorResource ? [sponsorResource] : [];
+        break;
+      }
+      case 'openDesign': {
+        const sponsorResource = openDesignToResource(buildOpenDesignRaw(config));
+        resources = sponsorResource ? [sponsorResource] : [];
+        break;
+      }
+      case 'commandCode': {
+        const sponsorResource = commandCodeToResource(buildCommandCodeRaw(config));
+        resources = sponsorResource ? [sponsorResource] : [];
+        break;
+      }
+      case 'opencodeGo': {
+        const sponsorResource = opencodeGoToResource(buildOpencodeGoRaw(config));
         resources = sponsorResource ? [sponsorResource] : [];
         break;
       }
@@ -537,14 +576,7 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
   const persistSponsorConfig = useCallback(
     async (brand: SponsorProviderBrand, input: ProviderEntryFormInput) => {
       const definition = getSponsorProviderDefinition(brand);
-      const raw =
-        brand === 'apikeyFun'
-          ? buildApiKeyFunRaw(config)
-          : brand === 'fennoAI'
-            ? buildFennoAIRaw(config)
-            : brand === 'qiniuCloud'
-              ? buildQiniuCloudRaw(config)
-              : buildKimiRaw(config);
+      const raw = SPONSOR_RAW_BUILDERS[brand](config);
       const entries = normalizeSponsorKeyEntries(input.sponsorKeyEntries);
       const openaiEntry = entries.find((entry) => entry.protocol === 'openai');
       const claudeEntry = entries.find((entry) => entry.protocol === 'claude');
@@ -638,7 +670,8 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
           openaiEntry,
           definition.providerName,
           definition.getProtocolUrls,
-          currentOpenAI?.config
+          currentOpenAI?.config,
+          definition.getDefaultHeaders?.()
         );
         if (currentOpenAI) {
           await providersApi.updateOpenAIProvider(
@@ -694,7 +727,10 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
           brand === 'apikeyFun' ||
           brand === 'fennoAI' ||
           brand === 'qiniuCloud' ||
-          brand === 'kimi'
+          brand === 'kimi' ||
+          brand === 'openDesign' ||
+          brand === 'commandCode' ||
+          brand === 'opencodeGo'
         ) {
           await runSponsorMutationWithRecovery(() => persistSponsorConfig(brand, input), refetch);
         }
@@ -771,7 +807,10 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
           brand === 'apikeyFun' ||
           brand === 'fennoAI' ||
           brand === 'qiniuCloud' ||
-          brand === 'kimi'
+          brand === 'kimi' ||
+          brand === 'openDesign' ||
+          brand === 'commandCode' ||
+          brand === 'opencodeGo'
         ) {
           await runSponsorMutationWithRecovery(() => persistSponsorConfig(brand, input), refetch);
         }
@@ -857,7 +896,10 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
           sel.brand === 'apikeyFun' ||
           sel.brand === 'fennoAI' ||
           sel.brand === 'qiniuCloud' ||
-          sel.brand === 'kimi'
+          sel.brand === 'kimi' ||
+          sel.brand === 'openDesign' ||
+          sel.brand === 'commandCode' ||
+          sel.brand === 'opencodeGo'
         ) {
           await runSponsorMutationWithRecovery(async () => {
             const raw = resource.raw as SponsorProviderRaw;
@@ -958,7 +1000,10 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
           brand === 'apikeyFun' ||
           brand === 'fennoAI' ||
           brand === 'qiniuCloud' ||
-          brand === 'kimi'
+          brand === 'kimi' ||
+          brand === 'openDesign' ||
+          brand === 'commandCode' ||
+          brand === 'opencodeGo'
         ) {
           await runSponsorMutationWithRecovery(
             () => toggleSponsorConfig(resource.raw as SponsorProviderRaw, disabled),

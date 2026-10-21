@@ -734,7 +734,8 @@
     "stale_request": "The connection or credential changed. Please retry.",
     "fiveHour": "5-hour limit",
     "weekly": "Weekly limit",
-    "credits": "Monthly credits",
+    "monthly": "Monthly credits",
+    "credits": "Credit balance",
     "credits_remaining": "{{amount}} remaining",
     "unknown": "Unknown",
     "remaining": "{{percent}}% remaining"
@@ -2117,7 +2118,10 @@
       "apikeyFun": "APIKEY.FUN",
       "fennoAI": "FennoAI",
       "qiniuCloud": "Qiniu Cloud",
-      "kimi": "Kimi"
+      "kimi": "Kimi",
+      "openDesign": "OpenDesign",
+      "commandCode": "Command Code",
+      "opencodeGo": "OpenCode Go"
     },
     "table": {
       "key": "Key",
@@ -2139,6 +2143,7 @@
       "description": "Manage resources under {{route}}"
     },
     "sponsor": {
+      "defaultHeaders": "Request headers",
       "protocolSummary": "Anthropic / OpenAI / Gemini / Codex API (Responses)",
       "detailHint": "{{provider}} is persisted into the matching API key configs by protocol; this view manages them together.",
       "registerLink": "Register here",

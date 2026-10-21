@@ -10,6 +10,9 @@ import vertexLogo from '@/assets/icons/vertex.svg';
 import apikeyFunLogo from '@/assets/icons/apikey-fun.png';
 import fennoAILogo from '@/assets/icons/fenno-ai.png';
 import qiniuCloudLogo from '@/assets/icons/qiniu-cloud.png';
+import openDesignLogo from '@/assets/icons/open-design.png';
+import commandCodeLogo from '@/assets/icons/command-code.png';
+import opencodeGoLogo from '@/assets/icons/opencode-go.png';
 import xaiLightLogo from '@/assets/icons/grok.svg';
 import xaiDarkLogo from '@/assets/icons/grok-dark.svg';
 import kimiLightLogo from '@/assets/icons/kimi-light.svg';
@@ -39,6 +42,9 @@ export const PROVIDER_LOGOS: Record<ProviderBrandLogoKey, ProviderBrandLogo> = {
   apikeyFun: { src: apikeyFunLogo },
   fennoAI: { src: fennoAILogo, transparent: true },
   qiniuCloud: { src: qiniuCloudLogo, transparent: true },
+  openDesign: { src: openDesignLogo, transparent: true },
+  commandCode: { src: commandCodeLogo },
+  opencodeGo: { src: opencodeGoLogo },
   kimi: {
     src: kimiDarkLogo,
     darkSrc: kimiLightLogo,
