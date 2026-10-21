@@ -19,6 +19,7 @@ import { SponsorProviderForm } from '../src/features/providers/sheets/forms/Spon
 import {
   buildProviderGroups,
   buildSponsorOpenAIConfig,
+  nextOpenAIProviderName,
 } from '../src/features/providers/useProviderWorkbench';
 import type { SponsorKeyEntryInput } from '../src/features/providers/types';
 import type { Config, OpenAIProviderConfig } from '../src/types';
@@ -145,5 +146,56 @@ describe('OpenCode Go preset provider', () => {
     expect(markup).toContain(OPENCODE_GO_OPENAI_BASE_URL);
     expect(markup).toContain('x-opencode-session: $CPA-SESSION-ID');
     expect(markup).not.toContain('test-form-group-0-protocol');
+  });
+});
+
+describe('OpenAI presets with several accounts', () => {
+  const config: Config = {
+    openaiCompatibility: [
+      {
+        name: 'opencode-go',
+        baseUrl: OPENCODE_GO_OPENAI_BASE_URL,
+        apiKeyEntries: [{ apiKey: 'a' }, { apiKey: 'b' }],
+      },
+      {
+        name: 'ocg-work',
+        baseUrl: `${OPENCODE_GO_OPENAI_BASE_URL}/`,
+        apiKeyEntries: [{ apiKey: 'c' }],
+      },
+      {
+        name: 'cc-personal',
+        baseUrl: COMMAND_CODE_OPENAI_BASE_URL,
+        apiKeyEntries: [{ apiKey: 'd' }],
+      },
+      {
+        name: 'other',
+        baseUrl: 'https://gateway.example.com/v1',
+        apiKeyEntries: [{ apiKey: 'e' }],
+      },
+    ],
+  };
+
+  test('lists each named entry as its own editable OpenAI-compatible resource', () => {
+    const opencodeGo = groupResources(config, 'opencodeGo');
+    expect(opencodeGo.map((resource) => resource.name)).toEqual(['opencode-go', 'ocg-work']);
+    expect(opencodeGo.every((resource) => resource.brand === 'openaiCompatibility')).toBe(true);
+    expect(groupResources(config, 'commandCode').map((resource) => resource.name)).toEqual([
+      'cc-personal',
+    ]);
+    expect(groupResources(config, 'openaiCompatibility').map((resource) => resource.name)).toEqual([
+      'other',
+    ]);
+  });
+
+  test('new preset entries get the first free name', () => {
+    expect(nextOpenAIProviderName(config, 'commandcode')).toBe('commandcode');
+    expect(nextOpenAIProviderName(config, 'opencode-go')).toBe('opencode-go-2');
+    const taken: Config = {
+      openaiCompatibility: [
+        { name: 'Opencode-Go', baseUrl: 'x' },
+        { name: 'opencode-go-2', baseUrl: 'x' },
+      ],
+    };
+    expect(nextOpenAIProviderName(taken, 'opencode-go')).toBe('opencode-go-3');
   });
 });

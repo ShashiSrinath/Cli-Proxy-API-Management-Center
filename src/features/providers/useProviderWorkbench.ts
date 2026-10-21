@@ -25,9 +25,6 @@ import {
   openaiToResource,
   qiniuCloudToResource,
   kimiToResource,
-  openDesignToResource,
-  commandCodeToResource,
-  opencodeGoToResource,
   vertexToResource,
   xaiToResource,
 } from './adapters';
@@ -68,7 +65,12 @@ import {
 import { buildOpenDesignRaw, isOpenDesignOpenAIProvider } from './openDesign';
 import { buildCommandCodeRaw, isCommandCodeOpenAIProvider } from './commandCode';
 import { buildOpencodeGoRaw, isOpencodeGoOpenAIProvider } from './opencodeGo';
-import { getSponsorProviderDefinition, type SponsorProtocolUrls } from './sponsorDefinitions';
+import {
+  getSponsorProviderDefinition,
+  isMultiProtocolSponsorBrand,
+  isOpenAIPresetBrand,
+  type SponsorProtocolUrls,
+} from './sponsorDefinitions';
 import { runSponsorMutationWithRecovery } from './sponsorMutationRecovery';
 
 export interface UseProviderWorkbenchResult {
@@ -252,6 +254,27 @@ const SPONSOR_RAW_BUILDERS: Record<
   openDesign: buildOpenDesignRaw,
   commandCode: buildCommandCodeRaw,
   opencodeGo: buildOpencodeGoRaw,
+};
+
+const OPENAI_PRESET_MATCHERS: Record<
+  'openDesign' | 'commandCode' | 'opencodeGo',
+  (config: OpenAIProviderConfig) => boolean
+> = {
+  openDesign: isOpenDesignOpenAIProvider,
+  commandCode: isCommandCodeOpenAIProvider,
+  opencodeGo: isOpencodeGoOpenAIProvider,
+};
+
+/** First free provider name: `opencode-go`, then `opencode-go-2`, `opencode-go-3`, ... */
+export const nextOpenAIProviderName = (config: Config | null | undefined, base: string): string => {
+  const taken = new Set(
+    (config?.openaiCompatibility ?? []).map((item) => item.name.trim().toLowerCase())
+  );
+  if (!taken.has(base.toLowerCase())) return base;
+  for (let n = 2; ; n += 1) {
+    const candidate = `${base}-${n}`;
+    if (!taken.has(candidate.toLowerCase())) return candidate;
+  }
 };
 
 export const buildSponsorOpenAIConfig = (
@@ -477,19 +500,17 @@ export const buildProviderGroups = (config: Config): ProviderGroup[] =>
         resources = sponsorResource ? [sponsorResource] : [];
         break;
       }
-      case 'openDesign': {
-        const sponsorResource = openDesignToResource(buildOpenDesignRaw(config));
-        resources = sponsorResource ? [sponsorResource] : [];
-        break;
-      }
-      case 'commandCode': {
-        const sponsorResource = commandCodeToResource(buildCommandCodeRaw(config));
-        resources = sponsorResource ? [sponsorResource] : [];
-        break;
-      }
+      case 'openDesign':
+      case 'commandCode':
       case 'opencodeGo': {
-        const sponsorResource = opencodeGoToResource(buildOpencodeGoRaw(config));
-        resources = sponsorResource ? [sponsorResource] : [];
+        const matches = OPENAI_PRESET_MATCHERS[brand];
+        resources = (config.openaiCompatibility ?? []).reduce<ProviderResource[]>(
+          (out, item, index) => {
+            if (matches(item)) out.push(openaiToResource(item, index));
+            return out;
+          },
+          []
+        );
         break;
       }
       default:
@@ -689,6 +710,26 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
     [config]
   );
 
+  const createOpenAIPresetEntry = useCallback(
+    async (brand: SponsorProviderBrand, input: ProviderEntryFormInput) => {
+      const definition = getSponsorProviderDefinition(brand);
+      const entry = normalizeSponsorKeyEntries(input.sponsorKeyEntries).find(
+        (item) => item.protocol === 'openai'
+      );
+      if (!entry) return;
+      await providersApi.createOpenAIProvider(
+        buildSponsorOpenAIConfig(
+          entry,
+          nextOpenAIProviderName(config, definition.providerName),
+          definition.getProtocolUrls,
+          undefined,
+          definition.getDefaultHeaders?.()
+        )
+      );
+    },
+    [config]
+  );
+
   const createProvider = useCallback(
     async (brand: ProviderBrand, input: ProviderEntryFormInput) => {
       setMutating(true);
@@ -723,14 +764,13 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
           );
         } else if (brand === 'openaiCompatibility') {
           await providersApi.createOpenAIProvider(buildOpenAIConfig(input));
+        } else if (isOpenAIPresetBrand(brand) && isMultiProtocolSponsorBrand(brand)) {
+          await createOpenAIPresetEntry(brand, input);
         } else if (
           brand === 'apikeyFun' ||
           brand === 'fennoAI' ||
           brand === 'qiniuCloud' ||
-          brand === 'kimi' ||
-          brand === 'openDesign' ||
-          brand === 'commandCode' ||
-          brand === 'opencodeGo'
+          brand === 'kimi'
         ) {
           await runSponsorMutationWithRecovery(() => persistSponsorConfig(brand, input), refetch);
         }
@@ -739,7 +779,7 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
         setMutating(false);
       }
     },
-    [persistSponsorConfig, refetch]
+    [createOpenAIPresetEntry, persistSponsorConfig, refetch]
   );
 
   const updateProvider = useCallback(
@@ -807,10 +847,7 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
           brand === 'apikeyFun' ||
           brand === 'fennoAI' ||
           brand === 'qiniuCloud' ||
-          brand === 'kimi' ||
-          brand === 'openDesign' ||
-          brand === 'commandCode' ||
-          brand === 'opencodeGo'
+          brand === 'kimi'
         ) {
           await runSponsorMutationWithRecovery(() => persistSponsorConfig(brand, input), refetch);
         }
@@ -896,10 +933,7 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
           sel.brand === 'apikeyFun' ||
           sel.brand === 'fennoAI' ||
           sel.brand === 'qiniuCloud' ||
-          sel.brand === 'kimi' ||
-          sel.brand === 'openDesign' ||
-          sel.brand === 'commandCode' ||
-          sel.brand === 'opencodeGo'
+          sel.brand === 'kimi'
         ) {
           await runSponsorMutationWithRecovery(async () => {
             const raw = resource.raw as SponsorProviderRaw;
@@ -1000,10 +1034,7 @@ export function useProviderWorkbench(): UseProviderWorkbenchResult {
           brand === 'apikeyFun' ||
           brand === 'fennoAI' ||
           brand === 'qiniuCloud' ||
-          brand === 'kimi' ||
-          brand === 'openDesign' ||
-          brand === 'commandCode' ||
-          brand === 'opencodeGo'
+          brand === 'kimi'
         ) {
           await runSponsorMutationWithRecovery(
             () => toggleSponsorConfig(resource.raw as SponsorProviderRaw, disabled),

@@ -216,6 +216,15 @@ export const isMultiProtocolSponsorBrand = (brand: ProviderBrand): brand is Spon
   brand === 'commandCode' ||
   brand === 'opencodeGo';
 
+/**
+ * OpenAI-only presets are create-only shortcuts. Several accounts of the same provider
+ * often coexist under different names, so each matching openai-compatibility entry is
+ * listed and edited on its own as a regular OpenAI-compatible provider instead of being
+ * aggregated into one sponsor resource.
+ */
+export const isOpenAIPresetBrand = (brand: ProviderBrand): boolean =>
+  brand === 'openDesign' || brand === 'commandCode' || brand === 'opencodeGo';
+
 export type SponsorAggregationConflict = 'multiple-configs' | 'multiple-openai-keys';
 
 export const getSponsorAggregationConflict = (

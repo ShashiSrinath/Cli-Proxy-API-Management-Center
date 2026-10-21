@@ -25,24 +25,6 @@ import {
   getKimiProtocolUrls,
   resolveKimiBaseUrl,
 } from './kimi';
-import {
-  OPEN_DESIGN_DISPLAY_NAME,
-  OPEN_DESIGN_PROTOCOL_LABELS,
-  getOpenDesignProtocolUrls,
-  resolveOpenDesignBaseUrl,
-} from './openDesign';
-import {
-  COMMAND_CODE_DISPLAY_NAME,
-  COMMAND_CODE_PROTOCOL_LABELS,
-  getCommandCodeProtocolUrls,
-  resolveCommandCodeBaseUrl,
-} from './commandCode';
-import {
-  OPENCODE_GO_DISPLAY_NAME,
-  OPENCODE_GO_PROTOCOL_LABELS,
-  getOpencodeGoProtocolUrls,
-  resolveOpencodeGoBaseUrl,
-} from './opencodeGo';
 import type {
   ProviderBrand,
   ProviderResource,
@@ -362,32 +344,5 @@ export function kimiToResource(raw: SponsorProviderRaw): ProviderResource | null
     protocolLabels: KIMI_PROTOCOL_LABELS,
     resolveBaseUrl: resolveKimiBaseUrl,
     getProtocolUrls: getKimiProtocolUrls,
-  });
-}
-
-export function openDesignToResource(raw: SponsorProviderRaw): ProviderResource | null {
-  return sponsorRawToResource('openDesign', raw, {
-    displayName: OPEN_DESIGN_DISPLAY_NAME,
-    protocolLabels: OPEN_DESIGN_PROTOCOL_LABELS,
-    resolveBaseUrl: resolveOpenDesignBaseUrl,
-    getProtocolUrls: getOpenDesignProtocolUrls,
-  });
-}
-
-export function commandCodeToResource(raw: SponsorProviderRaw): ProviderResource | null {
-  return sponsorRawToResource('commandCode', raw, {
-    displayName: COMMAND_CODE_DISPLAY_NAME,
-    protocolLabels: COMMAND_CODE_PROTOCOL_LABELS,
-    resolveBaseUrl: resolveCommandCodeBaseUrl,
-    getProtocolUrls: getCommandCodeProtocolUrls,
-  });
-}
-
-export function opencodeGoToResource(raw: SponsorProviderRaw): ProviderResource | null {
-  return sponsorRawToResource('opencodeGo', raw, {
-    displayName: OPENCODE_GO_DISPLAY_NAME,
-    protocolLabels: OPENCODE_GO_PROTOCOL_LABELS,
-    resolveBaseUrl: resolveOpencodeGoBaseUrl,
-    getProtocolUrls: getOpencodeGoProtocolUrls,
   });
 }
