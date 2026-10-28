@@ -13,28 +13,35 @@ export function resolveAuthProvider(file: AuthFileItem): string {
   return key;
 }
 
+export function isOpenDesignFile(file: AuthFileItem): boolean {
+  return (
+    (file.opendesign !== null && typeof file.opendesign === 'object') ||
+    resolveAuthProvider(file).includes('opendesign')
+  );
+}
+
 export function isAntigravityFile(file: AuthFileItem): boolean {
-  return resolveAuthProvider(file) === 'antigravity';
+  return !isOpenDesignFile(file) && resolveAuthProvider(file) === 'antigravity';
 }
 
 export function isClaudeFile(file: AuthFileItem): boolean {
-  return resolveAuthProvider(file) === 'claude';
+  return !isOpenDesignFile(file) && resolveAuthProvider(file) === 'claude';
 }
 
 export function isCodexFile(file: AuthFileItem): boolean {
-  return resolveAuthProvider(file) === 'codex';
+  return !isOpenDesignFile(file) && resolveAuthProvider(file) === 'codex';
 }
 
 export function isDevinFile(file: AuthFileItem): boolean {
-  return resolveAuthProvider(file) === 'devin';
+  return !isOpenDesignFile(file) && resolveAuthProvider(file) === 'devin';
 }
 
 export function isKimiFile(file: AuthFileItem): boolean {
-  return resolveAuthProvider(file) === 'kimi';
+  return !isOpenDesignFile(file) && resolveAuthProvider(file) === 'kimi';
 }
 
 export function isXaiFile(file: AuthFileItem): boolean {
-  return resolveAuthProvider(file) === 'xai';
+  return !isOpenDesignFile(file) && resolveAuthProvider(file) === 'xai';
 }
 
 /**
@@ -48,8 +55,9 @@ export function isOpencodeGoFile(file: AuthFileItem): boolean {
       ? (probe as { url: string }).url.toLowerCase()
       : '';
   return (
-    url.includes('opencode.ai/zen/go') ||
-    resolveAuthProvider(file) === 'openai-compatible-opencode-go'
+    !isOpenDesignFile(file) &&
+    (url.includes('opencode.ai/zen/go') ||
+      resolveAuthProvider(file) === 'openai-compatible-opencode-go')
   );
 }
 
@@ -64,8 +72,9 @@ export function isCommandCodeFile(file: AuthFileItem): boolean {
       ? (probe as { url: string }).url.toLowerCase()
       : '';
   return (
-    url.includes('api.commandcode.ai') ||
-    resolveAuthProvider(file) === 'openai-compatible-commandcode'
+    !isOpenDesignFile(file) &&
+    (url.includes('api.commandcode.ai') ||
+      resolveAuthProvider(file) === 'openai-compatible-commandcode')
   );
 }
 

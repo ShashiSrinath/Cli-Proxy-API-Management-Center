@@ -512,3 +512,14 @@ export interface XaiQuotaState {
   error?: string;
   errorStatus?: number;
 }
+
+export interface OpenDesignQuotaData {
+  windows: { label: string; used: number; limit: number; remaining: number; resetsAt?: string }[];
+  wallet: number;
+}
+export interface OpenDesignQuotaState {
+  status: 'idle' | 'loading' | 'success' | 'error';
+  data?: OpenDesignQuotaData;
+  error?: string;
+  errorStatus?: number;
+}

@@ -3,7 +3,7 @@ import type { MetaQuotaData, MetaQuotaState } from '@/types';
 import { apiCallApi } from '@/services/api/apiCall';
 import { authFilesApi } from '@/services/api/authFiles';
 import { captureQuotaCacheGeneration, commitIfQuotaCacheCurrent } from '@/stores/useQuotaStore';
-import { isDisabledAuthFile, resolveAuthProvider } from '@/utils/quota';
+import { isDisabledAuthFile, isOpenDesignFile, resolveAuthProvider } from '@/utils/quota';
 import type { QuotaProviderData } from '../types';
 import { createMetaQuotaFetcher, MetaQuotaError } from './requests';
 
@@ -19,7 +19,8 @@ const fetchMetaQuota = createMetaQuotaFetcher({
 export const META_CONFIG: QuotaProviderData<MetaQuotaState, MetaQuotaData> = {
   type: 'meta',
   i18nPrefix: 'meta_quota',
-  filterFn: (file) => resolveAuthProvider(file) === 'meta' && !isDisabledAuthFile(file),
+  filterFn: (file) =>
+    !isOpenDesignFile(file) && resolveAuthProvider(file) === 'meta' && !isDisabledAuthFile(file),
   fetchQuota: async (file, t: TFunction) => {
     try {
       return await fetchMetaQuota(file);

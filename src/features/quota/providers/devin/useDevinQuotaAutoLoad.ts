@@ -18,7 +18,12 @@ export function useDevinQuotaAutoLoad(
   useEffect(() => {
     if (disabled) return;
     const targets = entries.filter(({ type, file }) => {
-      if (type !== 'devin') return false;
+      if (type !== 'devin' && type !== 'opendesign') return false;
+      if (
+        type === 'opendesign' &&
+        (file.opendesign as { connected?: boolean } | undefined)?.connected === false
+      )
+        return false;
       const key = JSON.stringify([
         session,
         fileGenerations[file.name] ?? 0,
@@ -28,7 +33,13 @@ export function useDevinQuotaAutoLoad(
       if (attempted.current.has(key)) return false;
       attempted.current.add(key);
       // An explicit refresh already started in this effect cycle counts too.
-      return useQuotaStore.getState().devinQuota[getQuotaCacheKey(file)]?.status !== 'loading';
+      const cache =
+        type === 'devin'
+          ? useQuotaStore.getState().devinQuota
+          : useQuotaStore.getState().openDesignQuota;
+      return type === 'devin'
+        ? cache[getQuotaCacheKey(file)]?.status !== 'loading'
+        : cache[getQuotaCacheKey(file)] === undefined;
     });
     if (targets.length > 0) void loadQuota(targets);
   }, [disabled, entries, fileGenerations, loadQuota, session]);

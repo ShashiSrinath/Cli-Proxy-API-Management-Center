@@ -23,6 +23,7 @@ import { bindQuotaClasses } from '../types';
 import { QUOTA_ADAPTERS, type QuotaCardState } from '../providers';
 import { isQuotaRefreshDisabled, type QuotaFileEntry } from '../logic';
 import { useClaudeResetGrants } from '../providers/claude/ClaudeResetGrants';
+import { OpenDesignConnection } from '../providers/opendesign/OpenDesignConnection';
 import bodyStyles from './QuotaBody.module.scss';
 import styles from './QuotaCard.module.scss';
 
@@ -39,6 +40,7 @@ export type QuotaCardProps = {
   entranceDelayMs?: number | null;
   onRefresh: () => void;
   onReset: () => void;
+  onListRefresh: () => void;
 };
 
 export function QuotaCard(props: QuotaCardProps) {
@@ -51,6 +53,7 @@ export function QuotaCard(props: QuotaCardProps) {
     entranceDelayMs,
     onRefresh,
     onReset,
+    onListRefresh,
   } = props;
   const { t } = useTranslation();
   const adapter = QUOTA_ADAPTERS[entry.type];
@@ -128,7 +131,12 @@ export function QuotaCard(props: QuotaCardProps) {
             )}
           </>
         )}
-        {status === 'idle' ? (
+        {entry.type === 'opendesign' &&
+        ((status === 'idle' &&
+          (file.opendesign as { connected?: boolean } | undefined)?.connected === false) ||
+          (status === 'error' &&
+            (quota?.errorStatus === 409 || quota?.errorStatus === 412))) ? null : status ===
+          'idle' ? (
           <button
             type="button"
             className={styles.idleBody}
@@ -158,6 +166,16 @@ export function QuotaCard(props: QuotaCardProps) {
           <div className={styles.idleHint}>{t(`${adapter.i18nPrefix}.idle`)}</div>
         )}
       </div>
+
+      {entry.type === 'opendesign' && (
+        <OpenDesignConnection
+          file={file}
+          errorStatus={quota?.errorStatus}
+          disabled={!canRefresh}
+          onRefresh={onRefresh}
+          onListRefresh={onListRefresh}
+        />
+      )}
 
       {status !== 'idle' && (
         <footer className={styles.actionRow}>

@@ -1,6 +1,6 @@
 import type { AuthFileItem } from '@/types';
 import { normalizeRecentRequestAuthIndex } from '@/utils/recentRequests';
-import { isCommandCodeFile, isDevinFile, isOpencodeGoFile } from './validators';
+import { isCommandCodeFile, isDevinFile, isOpencodeGoFile, isOpenDesignFile } from './validators';
 
 const QUOTA_IDENTITY_SEPARATOR = '\0';
 
@@ -17,7 +17,7 @@ export function getQuotaCacheKey(file: AuthFileItem): string {
 
 /** Disambiguate same-name Devin cards without ever falling back to account (a secret). */
 export function getQuotaDisplayName(file: AuthFileItem): string {
-  if (isOpencodeGoFile(file) || isCommandCodeFile(file)) {
+  if (isOpencodeGoFile(file) || isCommandCodeFile(file) || isOpenDesignFile(file)) {
     // Config credentials have an ID-style name; show the config entry label instead.
     const label = typeof file.label === 'string' ? file.label.trim() : '';
     const authIndex = normalizeRecentRequestAuthIndex(file.authIndex);

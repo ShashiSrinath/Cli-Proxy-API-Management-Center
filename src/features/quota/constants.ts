@@ -11,6 +11,7 @@ export const QUOTA_TAB_ORDER: readonly QuotaProviderType[] = [
   'meta',
   'opencode-go',
   'commandcode',
+  'opendesign',
 ];
 
 export type QuotaTabId = 'all' | QuotaProviderType;

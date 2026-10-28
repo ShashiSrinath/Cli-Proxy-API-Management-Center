@@ -1,0 +1,33 @@
+.connection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+.connection p {
+  margin: 0;
+}
+.detail {
+  opacity: 0.75;
+  overflow-wrap: anywhere;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.steps {
+  padding-left: 1.5em;
+  display: grid;
+  gap: 0.6em;
+}
+.textarea {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  font-family: monospace;
+  -webkit-text-security: disc;
+}
+.error {
+  color: var(--color-error, #c33);
+}

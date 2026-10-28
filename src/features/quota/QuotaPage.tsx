@@ -130,6 +130,7 @@ export function QuotaPage() {
   const claudeQuota = useQuotaStore((state) => state.claudeQuota);
   const codexQuota = useQuotaStore((state) => state.codexQuota);
   const commandCodeQuota = useQuotaStore((state) => state.commandCodeQuota);
+  const openDesignQuota = useQuotaStore((state) => state.openDesignQuota);
   const devinQuota = useQuotaStore((state) => state.devinQuota);
   const kimiQuota = useQuotaStore((state) => state.kimiQuota);
   const metaQuota = useQuotaStore((state) => state.metaQuota);
@@ -143,6 +144,7 @@ export function QuotaPage() {
         claude: claudeQuota,
         codex: codexQuota,
         commandcode: commandCodeQuota,
+        opendesign: openDesignQuota,
         devin: devinQuota,
         kimi: kimiQuota,
         meta: metaQuota,
@@ -154,6 +156,7 @@ export function QuotaPage() {
       claudeQuota,
       codexQuota,
       commandCodeQuota,
+      openDesignQuota,
       devinQuota,
       kimiQuota,
       metaQuota,
@@ -439,6 +442,7 @@ export function QuotaPage() {
                 resetting={resettingQuotaName === getQuotaCacheKey(entry.file)}
                 entranceDelayMs={cardEntranceDelay(index)}
                 onRefresh={() => void refreshQuota(entry.file, QUOTA_ADAPTERS[entry.type])}
+                onListRefresh={() => void loadFiles()}
                 onReset={() => resetQuota(entry.file, QUOTA_ADAPTERS[entry.type])}
               />
             ))}

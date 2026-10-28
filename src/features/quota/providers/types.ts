@@ -12,6 +12,7 @@ import type {
   ClaudeQuotaState,
   CodexQuotaState,
   CommandCodeQuotaState,
+  OpenDesignQuotaState,
   DevinQuotaState,
   KimiQuotaState,
   MetaQuotaState,
@@ -30,7 +31,8 @@ export type QuotaProviderType =
   | 'xai'
   | 'meta'
   | 'opencode-go'
-  | 'commandcode';
+  | 'commandcode'
+  | 'opendesign';
 
 /** useQuotaStore 的结构契约（storeSelector/storeSetter 依赖）。 */
 export interface QuotaStore {
@@ -38,6 +40,7 @@ export interface QuotaStore {
   claudeQuota: Record<string, ClaudeQuotaState>;
   codexQuota: Record<string, CodexQuotaState>;
   commandCodeQuota: Record<string, CommandCodeQuotaState>;
+  openDesignQuota: Record<string, OpenDesignQuotaState>;
   devinQuota: Record<string, DevinQuotaState>;
   kimiQuota: Record<string, KimiQuotaState>;
   metaQuota: Record<string, MetaQuotaState>;
@@ -47,6 +50,7 @@ export interface QuotaStore {
   setClaudeQuota: (updater: QuotaUpdater<Record<string, ClaudeQuotaState>>) => void;
   setCodexQuota: (updater: QuotaUpdater<Record<string, CodexQuotaState>>) => void;
   setCommandCodeQuota: (updater: QuotaUpdater<Record<string, CommandCodeQuotaState>>) => void;
+  setOpenDesignQuota: (updater: QuotaUpdater<Record<string, OpenDesignQuotaState>>) => void;
   setDevinQuota: (updater: QuotaUpdater<Record<string, DevinQuotaState>>) => void;
   setKimiQuota: (updater: QuotaUpdater<Record<string, KimiQuotaState>>) => void;
   setMetaQuota: (updater: QuotaUpdater<Record<string, MetaQuotaState>>) => void;

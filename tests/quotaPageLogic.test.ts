@@ -74,6 +74,7 @@ describe('buildTabCounts', () => {
       meta: 0,
       'opencode-go': 0,
       commandcode: 0,
+      opendesign: 0,
     });
   });
 });
