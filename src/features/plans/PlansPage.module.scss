@@ -1,0 +1,219 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+.header,
+.controls,
+.row,
+.unassigned {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.header h1 {
+  margin: 0 0 6px;
+}
+.header p,
+.footnote {
+  color: var(--text-secondary);
+  margin: 0;
+}
+.controls {
+  justify-content: flex-end;
+}
+.offset {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+.hero strong {
+  font-size: 1.2rem;
+}
+.hero small,
+.footnote {
+  color: var(--text-secondary);
+}
+.hero button {
+  cursor: pointer;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.planBody,
+.form,
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.badge,
+.multiplier {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 12px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.multiplier {
+  font-size: 14px;
+}
+.red {
+  color: var(--error-color);
+  background: var(--bg-secondary);
+}
+.amber {
+  color: var(--amber-text);
+  background: color-mix(in srgb, var(--amber-color) 16%, transparent);
+}
+.green {
+  color: var(--success-badge-text);
+  background: var(--success-badge-bg);
+}
+.grey {
+  color: var(--text-secondary);
+}
+.bar {
+  height: 8px;
+  position: relative;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+.fill,
+.progress {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--viz-success);
+}
+.progress {
+  background: var(--text-secondary);
+}
+.bar i {
+  position: absolute;
+  top: -4px;
+  height: 16px;
+  width: 2px;
+  background: var(--text-primary);
+  transform: translateX(-50%);
+}
+.credential {
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  overflow-wrap: anywhere;
+}
+.window {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+.warning {
+  color: var(--warning-text);
+  background: var(--warning-bg);
+  padding: 8px;
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
+}
+.planBody p {
+  margin: 0;
+}
+.planBody summary {
+  cursor: pointer;
+}
+.details {
+  margin-top: 12px;
+}
+.chart {
+  width: 100%;
+  height: 160px;
+  overflow: visible;
+}
+.valueLine {
+  fill: none;
+  stroke: var(--viz-success);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.priceLine {
+  stroke: var(--text-secondary);
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+  vector-effect: non-scaling-stroke;
+}
+.dot {
+  fill: var(--viz-success);
+}
+.tableWrap {
+  overflow-x: auto;
+}
+.tableWrap table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+.tableWrap th,
+.tableWrap td {
+  padding: 6px;
+  border-bottom: 1px solid var(--border-color);
+}
+.unassigned {
+  padding: 10px 0;
+  border-top: 1px solid var(--border-color);
+}
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.form input:not([type='checkbox']),
+.form select,
+.form textarea,
+.offset select {
+  width: 100%;
+  padding: 8px;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+.form fieldset {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px;
+}
+.form small {
+  color: var(--text-secondary);
+}
+.form .checkbox {
+  flex-direction: row;
+  align-items: center;
+  margin-top: 8px;
+}
+@media (max-width: 650px) {
+  .header,
+  .controls {
+    justify-content: flex-start;
+  }
+}

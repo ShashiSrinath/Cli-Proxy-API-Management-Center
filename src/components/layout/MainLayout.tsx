@@ -644,6 +644,12 @@ export function MainLayout() {
       labelKey: 'nav_groups.observe',
       items: [
         {
+          path: '/plans',
+          labelKey: 'nav.plans',
+          metaKey: 'nav_meta.plans',
+          icon: sidebarIcons.dashboard,
+        },
+        {
           path: '/quota',
           labelKey: 'nav.quota_management',
           metaKey: 'nav_meta.quota_management',
