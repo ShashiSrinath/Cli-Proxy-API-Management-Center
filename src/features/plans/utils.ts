@@ -1,5 +1,5 @@
 import type { ProviderBrandLogoKey } from '@/features/providers/brandLogos';
-import type { PlanValue } from '@/types/plans';
+import type { PlanValue, PlanWindow } from '@/types/plans';
 import { TYPE_COLORS } from '@/utils/quota/constants';
 
 export const formatUsd = (n: number | null | undefined): string =>
@@ -296,6 +296,43 @@ export function getWindowMeterTier(usedFraction: number, exhausted: boolean): Wi
   if (exhausted || usedFraction >= 0.85) return 'red';
   if (usedFraction >= 0.6) return 'amber';
   return 'green';
+}
+
+export interface WindowProjection {
+  /** Used fraction expected at reset if the current pace holds (can exceed 1). */
+  fraction: number;
+  /** API-equivalent value expected at reset; null when no tracked value yet. */
+  valueUsd: number | null;
+  /** When the pace hits 100% before reset, the estimated moment; else null. */
+  exhaustsAt: string | null;
+}
+
+/** Minimum share of a window that must have elapsed before extrapolating its pace. */
+export const MIN_PROJECTION_ELAPSED = 0.1;
+
+/**
+ * Linearly extrapolate a live window's usage to its reset. Returns null when the
+ * window lacks usable bounds, has no usage yet, is already exhausted, or too little
+ * of it has elapsed for the pace to mean anything.
+ */
+export function projectWindow(
+  w: Pick<PlanWindow, 'window_start' | 'resets_at' | 'used_fraction' | 'value_usd' | 'exhausted'>,
+  now: number = Date.now()
+): WindowProjection | null {
+  const start = new Date(w.window_start).getTime();
+  const reset = new Date(w.resets_at).getTime();
+  const used = w.used_fraction ?? 0;
+  if (!Number.isFinite(start) || !Number.isFinite(reset) || reset <= start) return null;
+  if (w.exhausted || used >= 1 || used <= 0 || now <= start || now >= reset) return null;
+  const elapsed = (now - start) / (reset - start);
+  if (elapsed < MIN_PROJECTION_ELAPSED) return null;
+  const fraction = used / elapsed;
+  const exhaustMs = start + (now - start) / used;
+  return {
+    fraction,
+    valueUsd: w.value_usd > 0 ? w.value_usd / elapsed : null,
+    exhaustsAt: fraction >= 1 && exhaustMs < reset ? new Date(exhaustMs).toISOString() : null,
+  };
 }
 
 /** Calculate remaining days until target renewal date. */

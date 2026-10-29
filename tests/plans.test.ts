@@ -8,6 +8,7 @@ import {
   groupPlansByFamily,
   presetProviders,
   prettifyCompatName,
+  projectWindow,
   uniqueSlug,
 } from '../src/features/plans/utils';
 import type { PlanValue } from '../src/types/plans';
@@ -159,5 +160,32 @@ describe('plans helpers', () => {
     expect(commandGroup.totals.price_usd).toBe(20);
     expect(commandGroup.totals.value_usd).toBe(80);
     expect(commandGroup.totals.multiplier).toBe(4);
+  });
+
+  test('projects live window usage to reset at the current pace', () => {
+    const start = Date.parse('2026-10-29T00:00:00Z');
+    const hour = 3600000;
+    const w = {
+      window_start: new Date(start).toISOString(),
+      resets_at: new Date(start + 10 * hour).toISOString(),
+      used_fraction: 0.2,
+      value_usd: 4,
+      exhausted: false,
+    };
+    const half = projectWindow(w, start + 5 * hour);
+    expect(half?.fraction).toBeCloseTo(0.4);
+    expect(half?.valueUsd).toBeCloseTo(8);
+    expect(half?.exhaustsAt).toBeNull();
+
+    const hot = projectWindow({ ...w, used_fraction: 0.5, value_usd: 0 }, start + 2 * hour);
+    expect(hot?.fraction).toBeCloseTo(2.5);
+    expect(hot?.valueUsd).toBeNull();
+    expect(hot?.exhaustsAt).toBe(new Date(start + 4 * hour).toISOString());
+
+    expect(projectWindow(w, start + 0.5 * hour)).toBeNull(); // too early to extrapolate
+    expect(projectWindow({ ...w, used_fraction: 0 }, start + 5 * hour)).toBeNull();
+    expect(projectWindow({ ...w, exhausted: true }, start + 5 * hour)).toBeNull();
+    expect(projectWindow({ ...w, window_start: '' }, start + 5 * hour)).toBeNull();
+    expect(projectWindow(w, start + 11 * hour)).toBeNull();
   });
 });

@@ -25,6 +25,7 @@ import {
   getMultiplierTier,
   getProviderFamily,
   getWindowMeterTier,
+  projectWindow,
   relativeTime,
   resolveProviderThemeColor,
 } from './utils';
@@ -93,6 +94,9 @@ export function PlanCard({ plan, onEdit, isDark }: PlanCardProps) {
     const pct = Math.round(fraction * 100);
     const isExhausted = Boolean(w.exhausted || fraction >= 1);
     const meterTier = getWindowMeterTier(fraction, isExhausted);
+    const projection = projectWindow(w);
+    const projectedPct = projection ? Math.round(projection.fraction * 100) : null;
+    const projectionTier = projection ? getWindowMeterTier(projection.fraction, false) : null;
 
     return (
       <div key={w.key} className={styles.meterItem}>
@@ -104,11 +108,27 @@ export function PlanCard({ plan, onEdit, isDark }: PlanCardProps) {
           )}
         </div>
         <div className={styles.meterTrack}>
+          {projectedPct != null && (
+            <div
+              className={`${styles.meterProjected} ${styles['meterFill_' + projectionTier]}`}
+              style={{ width: `${Math.min(100, projectedPct)}%` }}
+            />
+          )}
           <div
             className={`${styles.meterFill} ${styles['meterFill_' + meterTier]}`}
             style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
           />
         </div>
+        {projection && (
+          <span
+            className={`${styles.meterProjection} ${styles['projection_' + projectionTier]}`}
+            title={t('plans.projectionHint')}
+          >
+            {projection.exhaustsAt
+              ? t('plans.projectedOut', { time: relativeTime(projection.exhaustsAt) })
+              : t('plans.projectedAtReset', { percent: projectedPct })}
+          </span>
+        )}
         <span className={styles.meterReset}>
           {t('plans.resetsIn', { time: relativeTime(w.resets_at) })}
         </span>
@@ -297,41 +317,65 @@ export function PlanCard({ plan, onEdit, isDark }: PlanCardProps) {
           {allWindows.length > 0 && (
             <div className={styles.windowDetailsGrid}>
               {credentials.map((c) =>
-                (c.windows ?? []).map((w) => (
-                  <div key={`${c.auth_id}-${w.key}`} className={styles.windowDetailCard}>
-                    <div className={styles.windowDetailHead}>
-                      <strong>{w.label}</strong>
-                      <span>{t('plans.resetsIn', { time: relativeTime(w.resets_at) })}</span>
-                    </div>
-                    <div className={styles.windowDetailStats}>
-                      {w.value_usd > 0 && (
-                        <span>
-                          {t('plans.used', { value: estimate(w.value_usd) })}
-                        </span>
-                      )}
-                      {w.est_headroom_usd != null && (
-                        <span>
-                          {t('plans.headroom', { value: estimate(w.est_headroom_usd) })}
-                        </span>
-                      )}
-                    </div>
-                    {w.provider_used != null && w.provider_limit != null && (
-                      <div className={styles.providerMeteredText}>
-                        {t('plans.providerMetered', {
-                          used:
-                            w.unit === 'usd'
-                              ? formatUsd(w.provider_used)
-                              : w.provider_used.toLocaleString(),
-                          limit:
-                            w.unit === 'usd'
-                              ? formatUsd(w.provider_limit)
-                              : w.provider_limit.toLocaleString(),
-                          unit: w.unit === 'usd' ? '' : w.unit,
-                        })}
+                (c.windows ?? []).map((w) => {
+                  const projection = projectWindow(w);
+                  return (
+                    <div key={`${c.auth_id}-${w.key}`} className={styles.windowDetailCard}>
+                      <div className={styles.windowDetailHead}>
+                        <strong>{w.label}</strong>
+                        <span>{t('plans.resetsIn', { time: relativeTime(w.resets_at) })}</span>
                       </div>
-                    )}
-                  </div>
-                ))
+                      <div className={styles.windowDetailStats}>
+                        {w.value_usd > 0 && (
+                          <span>
+                            {t('plans.used', { value: estimate(w.value_usd) })}
+                          </span>
+                        )}
+                        {w.est_headroom_usd != null && (
+                          <span>
+                            {t('plans.headroom', { value: estimate(w.est_headroom_usd) })}
+                          </span>
+                        )}
+                      </div>
+                      {projection && (
+                        <div
+                          className={`${styles.windowProjectionText} ${
+                            styles['projection_' + getWindowMeterTier(projection.fraction, false)]
+                          }`}
+                          title={t('plans.projectionHint')}
+                        >
+                          {projection.exhaustsAt
+                            ? t('plans.projectedOutDetail', {
+                                time: relativeTime(projection.exhaustsAt),
+                              })
+                            : projection.valueUsd != null
+                              ? t('plans.projectedDetailValue', {
+                                  percent: Math.round(projection.fraction * 100),
+                                  value: estimate(projection.valueUsd),
+                                })
+                              : t('plans.projectedDetail', {
+                                  percent: Math.round(projection.fraction * 100),
+                                })}
+                        </div>
+                      )}
+                      {w.provider_used != null && w.provider_limit != null && (
+                        <div className={styles.providerMeteredText}>
+                          {t('plans.providerMetered', {
+                            used:
+                              w.unit === 'usd'
+                                ? formatUsd(w.provider_used)
+                                : w.provider_used.toLocaleString(),
+                            limit:
+                              w.unit === 'usd'
+                                ? formatUsd(w.provider_limit)
+                                : w.provider_limit.toLocaleString(),
+                            unit: w.unit === 'usd' ? '' : w.unit,
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
           )}

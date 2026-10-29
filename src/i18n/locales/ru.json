@@ -2548,6 +2548,12 @@
     "planPrice": "Стоимость плана",
     "cumulativeValue": "Накопленная ценность",
     "noModelTraffic": "Нет трафика по моделям за этот цикл",
-    "noWindows": "Окна лимитов не настроены"
+    "noWindows": "Окна лимитов не настроены",
+    "projectedAtReset": "→ ≈{{percent}}% by reset",
+    "projectedOut": "→ out {{time}}",
+    "projectedDetail": "On pace for ≈{{percent}}% by reset",
+    "projectedDetailValue": "On pace for ≈{{percent}}% ({{value}}) by reset",
+    "projectedOutDetail": "On pace to run out {{time}}, before reset",
+    "projectionHint": "Projected by extrapolating this window's current pace to its reset."
   }
 }

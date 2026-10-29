@@ -2578,6 +2578,12 @@
     "planPrice": "方案價格",
     "cumulativeValue": "累計價值",
     "noModelTraffic": "本週期暫無模型調用記錄",
-    "noWindows": "未配置限額週期"
+    "noWindows": "未配置限額週期",
+    "projectedAtReset": "→ ≈{{percent}}% by reset",
+    "projectedOut": "→ out {{time}}",
+    "projectedDetail": "On pace for ≈{{percent}}% by reset",
+    "projectedDetailValue": "On pace for ≈{{percent}}% ({{value}}) by reset",
+    "projectedOutDetail": "On pace to run out {{time}}, before reset",
+    "projectionHint": "Projected by extrapolating this window's current pace to its reset."
   }
 }

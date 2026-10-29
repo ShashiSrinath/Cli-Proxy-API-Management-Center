@@ -2554,6 +2554,12 @@
     "planPrice": "Plan price",
     "cumulativeValue": "Cumulative value",
     "noModelTraffic": "No model traffic recorded this cycle",
-    "noWindows": "No limit windows configured"
+    "noWindows": "No limit windows configured",
+    "projectedAtReset": "→ ≈{{percent}}% by reset",
+    "projectedOut": "→ out {{time}}",
+    "projectedDetail": "On pace for ≈{{percent}}% by reset",
+    "projectedDetailValue": "On pace for ≈{{percent}}% ({{value}}) by reset",
+    "projectedOutDetail": "On pace to run out {{time}}, before reset",
+    "projectionHint": "Projected by extrapolating this window's current pace to its reset."
   }
 }

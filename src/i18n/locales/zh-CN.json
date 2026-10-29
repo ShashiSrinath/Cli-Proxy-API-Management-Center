@@ -2552,6 +2552,12 @@
     "planPrice": "计划价格",
     "cumulativeValue": "累计价值",
     "noModelTraffic": "本周期暂无模型调用记录",
-    "noWindows": "未配置限额周期"
+    "noWindows": "未配置限额周期",
+    "projectedAtReset": "→ ≈{{percent}}% by reset",
+    "projectedOut": "→ out {{time}}",
+    "projectedDetail": "On pace for ≈{{percent}}% by reset",
+    "projectedDetailValue": "On pace for ≈{{percent}}% ({{value}}) by reset",
+    "projectedOutDetail": "On pace to run out {{time}}, before reset",
+    "projectionHint": "Projected by extrapolating this window's current pace to its reset."
   }
 }
