@@ -4,7 +4,12 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { apiClient } from '@/services/api/client';
 import { usagePlansApi } from '@/services/api/usagePlans';
-import type { AvailablePlanCredential, SubscriptionPlan } from '@/types/plans';
+import type {
+  AvailablePlanCredential,
+  PlanLimitTypeSetting,
+  PlanRoutingSetting,
+  SubscriptionPlan,
+} from '@/types/plans';
 import { presets, presetProviders, uniqueSlug } from './utils';
 import styles from './PlansPage.module.scss';
 
@@ -17,7 +22,22 @@ type Draft = {
   anchor: string;
   credentials: string[];
   notes: string;
+  limitType: PlanLimitTypeSetting;
+  routing: PlanRoutingSetting;
 };
+const LIMIT_TYPES: { value: PlanLimitTypeSetting; key: string }[] = [
+  { value: '', key: 'plans.limitTypeAuto' },
+  { value: 'weekly', key: 'plans.limitTypeWeekly' },
+  { value: 'monthly', key: 'plans.limitTypeMonthly' },
+];
+const ROUTING_MODES: { value: PlanRoutingSetting; key: string }[] = [
+  { value: '', key: 'plans.routingAuto' },
+  { value: 'prefer', key: 'plans.routingPrefer' },
+  { value: 'avoid', key: 'plans.routingAvoid' },
+];
+const asLimitType = (v: unknown): PlanLimitTypeSetting =>
+  v === 'weekly' || v === 'monthly' ? v : '';
+const asRouting = (v: unknown): PlanRoutingSetting => (v === 'prefer' || v === 'avoid' ? v : '');
 export function PlanEditor({
   initial,
   providers,
@@ -41,6 +61,8 @@ export function PlanEditor({
     anchor: initial?.['anchor-date'] ?? '',
     credentials: initial?.credentials ?? [],
     notes: initial?.notes ?? '',
+    limitType: asLimitType(initial?.['limit-type']),
+    routing: asRouting(initial?.routing),
   });
   const [connectionRevision] = useState(() => apiClient.getConnectionRevision());
   const [busy, setBusy] = useState(false);
@@ -69,7 +91,10 @@ export function PlanEditor({
             draft.name,
             plans.map((p) => p.id)
           );
+        // Start from the stored plan so fields this editor does not manage survive the save.
+        const existing = draft.id ? plans.find((p) => p.id === id) : undefined;
         const plan: SubscriptionPlan = {
+          ...existing,
           id,
           name: draft.name.trim(),
           provider: draft.provider,
@@ -78,6 +103,8 @@ export function PlanEditor({
           'anchor-date': draft.anchor,
           credentials: draft.credentials,
           notes: draft.notes,
+          'limit-type': draft.limitType,
+          routing: draft.routing,
         };
         if (draft.id && !plans.some((p) => p.id === id)) throw new Error(t('plans.missingPlan'));
         return draft.id ? plans.map((p) => (p.id === id ? plan : p)) : [...plans, plan];
@@ -202,6 +229,34 @@ export function PlanEditor({
             onChange={(e) => patch({ anchor: e.target.value })}
           />
           <small>{t('plans.anchorHint')}</small>
+        </label>
+        <label>
+          {t('plans.limitType')}
+          <select
+            value={draft.limitType}
+            onChange={(e) => patch({ limitType: asLimitType(e.target.value) })}
+          >
+            {LIMIT_TYPES.map((o) => (
+              <option value={o.value} key={o.value || 'auto'}>
+                {t(o.key)}
+              </option>
+            ))}
+          </select>
+          <small>{t('plans.limitTypeHint')}</small>
+        </label>
+        <label>
+          {t('plans.routingMode')}
+          <select
+            value={draft.routing}
+            onChange={(e) => patch({ routing: asRouting(e.target.value) })}
+          >
+            {ROUTING_MODES.map((o) => (
+              <option value={o.value} key={o.value || 'auto'}>
+                {t(o.key)}
+              </option>
+            ))}
+          </select>
+          <small>{t('plans.routingHint')}</small>
         </label>
         <fieldset>
           <legend>{t('plans.credentials')}</legend>

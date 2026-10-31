@@ -1153,6 +1153,401 @@
 }
 
 /* ==========================================================================
+   Smart Routing Order Panel
+   ========================================================================== */
+.routingPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  box-shadow: var(--shadow);
+}
+
+.routingHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.routingHeadText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.routingTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.routingToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-tertiary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+}
+
+.routingExplainer {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.routingControls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--text-secondary);
+}
+
+.routingUpdated {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.routingBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.routingManualNote {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  color: var(--warning-text);
+  font-size: 13px;
+}
+
+.routingEmpty {
+  margin: 0;
+  padding: 14px;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary);
+  font-size: 13px;
+  text-align: center;
+}
+
+.routingList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.routingListInactive .routingRow {
+  opacity: 0.62;
+}
+
+.routingGroupLabel {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.routingRow {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+}
+
+.routingRow_serving {
+  border-color: var(--primary-30, var(--primary-color));
+  background: var(--primary-8, var(--bg-secondary));
+}
+
+.rankBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 13px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+
+  .routingRow_serving & {
+    background: var(--primary-color);
+    color: var(--primary-contrast, #fff);
+  }
+}
+
+.routingMain {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.routingTitleRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.routingLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.routingPlanName {
+  flex-shrink: 0;
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+}
+
+.routingChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.routingChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 550;
+  line-height: 1.5;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.routingChipHint {
+  font-weight: 400;
+  color: var(--text-tertiary);
+}
+
+.routingChipMuted {
+  border-style: dashed;
+  color: var(--text-tertiary);
+}
+
+.routingChipMono {
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.routingChip_prefer {
+  background: var(--success-badge-bg);
+  color: var(--success-badge-text);
+  border-color: var(--success-badge-border);
+}
+
+.routingChip_avoid {
+  background: var(--failure-badge-bg);
+  color: var(--failure-badge-text);
+  border-color: var(--failure-badge-border);
+}
+
+.routingReason {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.routingSide {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 120px;
+  max-width: 260px;
+}
+
+.routingState {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.routingState_serving {
+  background: var(--success-badge-bg);
+  color: var(--success-badge-text);
+  border-color: var(--success-badge-border);
+}
+
+.routingState_next {
+  background: var(--primary-10, var(--bg-tertiary));
+  color: var(--primary-color);
+  border-color: var(--primary-30, var(--border-color));
+}
+
+.routingState_paused {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border-color: var(--warning-border);
+}
+
+.routingState_disabled {
+  color: var(--text-tertiary);
+}
+
+.routingRemaining {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  width: 120px;
+}
+
+.routingRemainingText {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.routingFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.routingAdvancedBtn {
+  padding: 2px 6px;
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  background: none;
+  color: var(--primary-color);
+  font: inherit;
+  font-weight: 550;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+}
+
+/* Plan card routing badges */
+.planBadges {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.cardRankBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border-radius: 10px;
+  border: 1px solid var(--primary-30, var(--border-color));
+  background: var(--primary-10, var(--bg-tertiary));
+  color: var(--primary-color);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.55;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.cardRankBadge_paused {
+  border-color: var(--warning-border);
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.cardRankBadge_disabled {
+  border-color: var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+}
+
+.cardLimitChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 550;
+  line-height: 1.55;
+  white-space: nowrap;
+}
+
+.meterUnknown {
+  font-size: 11px;
+  font-weight: 550;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
    Footer & Accuracy Notes
    ========================================================================== */
 .footer {
@@ -1341,6 +1736,18 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
+  }
+
+  .routingRow {
+    grid-template-columns: auto auto minmax(0, 1fr);
+  }
+
+  .routingSide {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    max-width: none;
   }
 }
 

@@ -2568,6 +2568,97 @@
     "projectedDetail": "On pace for ≈{{percent}}% by reset",
     "projectedDetailValue": "On pace for ≈{{percent}}% ({{value}}) by reset",
     "projectedOutDetail": "On pace to run out {{time}}, before reset",
-    "projectionHint": "Projected by extrapolating this window's current pace to its reset."
+    "projectionHint": "Projected by extrapolating this window's current pace to its reset.",
+    "limitType": "限额类型",
+    "limitTypeAuto": "自动检测",
+    "limitTypeWeekly": "仅每周限额",
+    "limitTypeMonthly": "每月限额",
+    "limitTypeHint": "仅有每周限额的套餐会先于有每月上限的套餐使用：每月额度更稀缺，而每周未用完的额度会在重置时作废。",
+    "routingMode": "路由",
+    "routingAuto": "自动",
+    "routingPrefer": "优先 — 最先使用",
+    "routingAvoid": "避免 — 最后使用",
+    "routingHint": "覆盖此套餐凭证在智能路由中的位置。限额耗尽的凭证始终会暂停，直到重置。",
+    "routing": {
+      "title": "路由顺序",
+      "explainer": "请求优先发送到 #1；当它达到限额时，由下一个接管。",
+      "smartRouting": "智能路由",
+      "smartRoutingHint": "智能路由：按限额和重置时间自动排序套餐凭证",
+      "updated": "更新于 {{time}}",
+      "summary": "{{active}} 个可用 · {{paused}} 个暂停",
+      "rankLabel": "第 {{rank}} 位",
+      "manualNote": "智能路由已关闭 — 请求按每个凭证的手动优先级分配。",
+      "empty": "暂无可路由的套餐凭证。将凭证分配到套餐后即可排序。",
+      "inactiveGroup": "已暂停和已禁用（{{count}}）",
+      "outsideNote": "不属于任何套餐的凭证会在这些之后，按手动优先级使用。",
+      "showAdvanced": "显示优先级数值",
+      "hideAdvanced": "隐藏优先级数值",
+      "priority": "优先级 {{value}}",
+      "priorityHint": "调度器实际优先级（越高越优先）",
+      "toggleFailed": "无法更改智能路由。",
+      "remaining": "剩余 {{percent}}%",
+      "remainingHint": "最长限额窗口的剩余比例",
+      "limit": {
+        "weekly": "每周限额",
+        "monthly": "每月限额"
+      },
+      "limitSource": {
+        "auto": "自动",
+        "config": "手动设置"
+      },
+      "limitSourceHint": {
+        "auto": "根据套餐的限额窗口检测",
+        "config": "在套餐编辑器中设置"
+      },
+      "override": {
+        "prefer": "优先",
+        "avoid": "避免"
+      },
+      "reset": {
+        "in": "{{time}} 后完全重置",
+        "estimated": "≈ {{time}} 后完全重置（未开始）",
+        "due": "即将完全重置",
+        "unknown": "重置时间未知"
+      },
+      "status": {
+        "serving": "正在服务",
+        "next": "下一个",
+        "standby": "待命",
+        "paused": "已暂停",
+        "pausedDetail": "已暂停 — 已达{{window}}限额，{{time}} 后恢复",
+        "pausedWindow": "已暂停 — 已达{{window}}限额",
+        "pausedUntil": "已暂停 — {{time}} 后恢复",
+        "disabled": "已禁用"
+      },
+      "window": {
+        "fiveHour": "5 小时",
+        "weekly": "每周",
+        "monthly": "每月",
+        "daily": "每日"
+      },
+      "reason": {
+        "manual": "按手动优先级排序（智能路由已关闭）",
+        "disabled": "凭证已禁用，不会接收流量",
+        "paused": "某个限额已耗尽 — 在重置前跳过",
+        "preferred": "由你设为优先 — 先于其他套餐使用",
+        "avoided": "由你设为避免 — 在其他套餐之后使用",
+        "weeklySoonest": "仅每周限额且最早重置 — 在重置前用掉",
+        "weeklyLater": "仅每周限额；重置晚于上方凭证",
+        "weeklyNotStarted": "仅每周限额；窗口尚未开始",
+        "monthlySoonest": "每月上限且最早重置",
+        "monthlyAfterWeekly": "每月上限 — 在每周套餐之后使用",
+        "monthlyLater": "每月上限；重置晚于上方凭证",
+        "monthlyNotStarted": "每月上限；周期尚未开始",
+        "tieHeadroom": "与上方同时重置；按剩余额度排序"
+      },
+      "card": {
+        "rank": "路由 #{{rank}}",
+        "paused": "已暂停",
+        "disabled": "已禁用",
+        "rankHint": "在路由顺序中的位置",
+        "creditsLeft": "剩余 {{value}} 额度",
+        "usageUnknown": "用量未知"
+      }
+    }
   }
 }

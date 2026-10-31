@@ -26,6 +26,8 @@ import type { PlansResponse, SubscriptionPlan } from '@/types/plans';
 import { BrandLogo } from './BrandLogo';
 import { PlanCard } from './PlanCard';
 import { PlanEditor } from './PlanEditor';
+import { routingByAuthId } from './routing';
+import { RoutingPanel } from './RoutingPanel';
 import {
   estimate,
   formatUsd,
@@ -48,6 +50,7 @@ export function PlansPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [editor, setEditor] = useState<Partial<SubscriptionPlan> | null>(null);
+  const [smartPending, setSmartPending] = useState<boolean | null>(null);
 
   const request = useRef(0);
   const unassignedRef = useRef<HTMLElement>(null);
@@ -83,6 +86,7 @@ export function PlansPage() {
     return () => {
       setData(null);
       setEditor(null);
+      setSmartPending(null);
     };
   }, [apiBase, connected]);
 
@@ -100,6 +104,24 @@ export function PlansPage() {
       setError(e instanceof Error ? e.message : t('plans.loadFailed'));
     }
   };
+
+  const toggleSmartRouting = async (enabled: boolean) => {
+    const revision = apiClient.getConnectionRevision();
+    setSmartPending(enabled);
+    try {
+      await usagePlansApi.setSmartRouting(enabled);
+      if (revision !== apiClient.getConnectionRevision()) return;
+      await refresh();
+    } catch (e) {
+      if (revision !== apiClient.getConnectionRevision()) return;
+      setError(e instanceof Error ? e.message : t('plans.routing.toggleFailed'));
+    } finally {
+      if (revision === apiClient.getConnectionRevision()) setSmartPending(null);
+    }
+  };
+
+  const routing = data?.routing;
+  const routingIndex = useMemo(() => routingByAuthId(routing), [routing]);
 
   // Grouped plans
   const plans = data?.plans;
@@ -249,6 +271,17 @@ export function PlansPage() {
             </article>
           </section>
 
+          {/* Smart routing order */}
+          {data.routing && (
+            <RoutingPanel
+              routing={data.routing}
+              pendingEnabled={smartPending}
+              busy={smartPending !== null}
+              disabled={!connected}
+              onToggle={(enabled) => void toggleSmartRouting(enabled)}
+            />
+          )}
+
           {/* Warning callout for unassigned usage */}
           {(data.totals.unassigned_value_usd ?? 0) > 0 && (
             <div className={styles.unassignedCallout} role="alert">
@@ -321,6 +354,7 @@ export function PlansPage() {
                         plan={p}
                         onEdit={() => void edit(p.id)}
                         isDark={isDark}
+                        routing={routingIndex}
                       />
                     ))}
                   </div>

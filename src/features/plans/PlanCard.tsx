@@ -14,9 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/Table';
-import type { PlanCredential, PlanValue, PlanWindow } from '@/types/plans';
+import type { PlanCredential, PlanValue, PlanWindow, RoutingOrderEntry } from '@/types/plans';
 import { BrandLogo } from './BrandLogo';
 import { CumulativeChart } from './CumulativeChart';
+import { windowCreditsLeft, windowUsedFraction } from './routing';
 import {
   dateLabel,
   estimate,
@@ -35,6 +36,8 @@ interface PlanCardProps {
   plan: PlanValue;
   onEdit: () => void;
   isDark: boolean;
+  /** Smart-routing entries by credential id; empty when the server lacks routing. */
+  routing?: Map<string, RoutingOrderEntry>;
 }
 
 function formatShortWindowLabel(label: string): string {
@@ -47,7 +50,7 @@ function formatShortWindowLabel(label: string): string {
   return label;
 }
 
-export function PlanCard({ plan, onEdit, isDark }: PlanCardProps) {
+export function PlanCard({ plan, onEdit, isDark, routing }: PlanCardProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
@@ -88,9 +91,48 @@ export function PlanCard({ plan, onEdit, isDark }: PlanCardProps) {
       ? Math.min(100, Math.max(0, (plan.elapsed_days / plan.length_days) * 100))
       : 0;
 
+  const renderRankBadge = (authId: string) => {
+    const entry = routing?.get(authId);
+    if (!entry) return null;
+    const text =
+      entry.state === 'active'
+        ? t('plans.routing.card.rank', { rank: entry.rank })
+        : t(`plans.routing.card.${entry.state}`);
+    return (
+      <span
+        className={`${styles.cardRankBadge} ${styles['cardRankBadge_' + entry.state] ?? ''}`}
+        title={t('plans.routing.card.rankHint')}
+      >
+        {text}
+      </span>
+    );
+  };
+
   // Window meter renderer
   const renderMeter = (w: PlanWindow) => {
-    const fraction = w.used_fraction ?? 0;
+    const known = windowUsedFraction(w);
+    if (known == null) {
+      const credits = windowCreditsLeft(w);
+      return (
+        <div key={w.key} className={styles.meterItem}>
+          <div className={styles.meterTop}>
+            <span className={styles.meterLabel}>{formatShortWindowLabel(w.label)}</span>
+            {w.exhausted && <span className={styles.exhaustedChip}>{t('plans.exhausted')}</span>}
+          </div>
+          <span className={styles.meterUnknown}>
+            {credits != null
+              ? t('plans.routing.card.creditsLeft', { value: estimate(credits) })
+              : t('plans.routing.card.usageUnknown')}
+          </span>
+          {w.resets_at && (
+            <span className={styles.meterReset}>
+              {t('plans.resetsIn', { time: relativeTime(w.resets_at) })}
+            </span>
+          )}
+        </div>
+      );
+    }
+    const fraction = known;
     const pct = Math.round(fraction * 100);
     const isExhausted = Boolean(w.exhausted || fraction >= 1);
     const meterTier = getWindowMeterTier(fraction, isExhausted);
@@ -161,6 +203,24 @@ export function PlanCard({ plan, onEdit, isDark }: PlanCardProps) {
         <div className={styles.summaryLeft}>
           <div className={styles.planTitleRow}>
             <strong className={styles.planName}>{plan.name}</strong>
+            <span className={styles.planBadges}>
+              {isSingleCredential && credentials[0] && renderRankBadge(credentials[0].auth_id)}
+              {plan.limit_type && (
+                <span
+                  className={styles.cardLimitChip}
+                  title={t(
+                    `plans.routing.limitSourceHint.${plan.limit_type_source === 'config' ? 'config' : 'auto'}`
+                  )}
+                >
+                  {t(`plans.routing.limit.${plan.limit_type}`)}
+                </span>
+              )}
+              {(plan.routing === 'prefer' || plan.routing === 'avoid') && (
+                <span className={`${styles.cardLimitChip} ${styles['routingChip_' + plan.routing]}`}>
+                  {t(`plans.routing.override.${plan.routing}`)}
+                </span>
+              )}
+            </span>
           </div>
           <div className={styles.planMetaRow}>
             <span className={styles.accountLabel} title={accountLabel}>
@@ -207,7 +267,7 @@ export function PlanCard({ plan, onEdit, isDark }: PlanCardProps) {
               {credentials.map((cred: PlanCredential) => (
                 <div key={cred.auth_id} className={styles.credSubRow}>
                   <span className={styles.credSubLabel} title={cred.label || cred.auth_id}>
-                    {cred.label || cred.auth_id}
+                    {renderRankBadge(cred.auth_id)} {cred.label || cred.auth_id}
                   </span>
                   <div className={styles.metersInline}>
                     {(cred.windows ?? []).map(renderMeter)}
@@ -323,7 +383,9 @@ export function PlanCard({ plan, onEdit, isDark }: PlanCardProps) {
                     <div key={`${c.auth_id}-${w.key}`} className={styles.windowDetailCard}>
                       <div className={styles.windowDetailHead}>
                         <strong>{w.label}</strong>
-                        <span>{t('plans.resetsIn', { time: relativeTime(w.resets_at) })}</span>
+                        {w.resets_at && (
+                          <span>{t('plans.resetsIn', { time: relativeTime(w.resets_at) })}</span>
+                        )}
                       </div>
                       <div className={styles.windowDetailStats}>
                         {w.value_usd > 0 && (
@@ -356,6 +418,13 @@ export function PlanCard({ plan, onEdit, isDark }: PlanCardProps) {
                               : t('plans.projectedDetail', {
                                   percent: Math.round(projection.fraction * 100),
                                 })}
+                        </div>
+                      )}
+                      {windowCreditsLeft(w) != null && (
+                        <div className={styles.providerMeteredText}>
+                          {t('plans.routing.card.creditsLeft', {
+                            value: estimate(windowCreditsLeft(w)),
+                          })}
                         </div>
                       )}
                       {w.provider_used != null && w.provider_limit != null && (

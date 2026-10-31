@@ -2570,6 +2570,97 @@
     "projectedDetail": "On pace for ≈{{percent}}% by reset",
     "projectedDetailValue": "On pace for ≈{{percent}}% ({{value}}) by reset",
     "projectedOutDetail": "On pace to run out {{time}}, before reset",
-    "projectionHint": "Projected by extrapolating this window's current pace to its reset."
+    "projectionHint": "Projected by extrapolating this window's current pace to its reset.",
+    "limitType": "Limit type",
+    "limitTypeAuto": "Auto-detect",
+    "limitTypeWeekly": "Weekly limits only",
+    "limitTypeMonthly": "Monthly limit",
+    "limitTypeHint": "Weekly-only plans are used before monthly-capped ones: monthly caps are scarcer, and unused weekly capacity is lost at reset.",
+    "routingMode": "Routing",
+    "routingAuto": "Auto",
+    "routingPrefer": "Prefer — use first",
+    "routingAvoid": "Avoid — use last",
+    "routingHint": "Overrides where this plan's credentials sit in smart routing. Credentials with an exhausted limit are always paused until it resets.",
+    "routing": {
+      "title": "Routing order",
+      "explainer": "Requests go to #1 first; when it hits a limit, the next one takes over.",
+      "smartRouting": "Smart routing",
+      "smartRoutingHint": "Smart routing: rank plan credentials automatically by limits and resets",
+      "updated": "Updated {{time}}",
+      "summary": "{{active}} active · {{paused}} paused",
+      "rankLabel": "Rank {{rank}}",
+      "manualNote": "Smart routing is off — requests follow each credential's manual priority.",
+      "empty": "No plan credentials to route yet. Assign credentials to a plan to rank them.",
+      "inactiveGroup": "Paused & disabled ({{count}})",
+      "outsideNote": "Credentials outside plans are used after these, by their manual priority.",
+      "showAdvanced": "Show priority numbers",
+      "hideAdvanced": "Hide priority numbers",
+      "priority": "priority {{value}}",
+      "priorityHint": "Effective scheduler priority (higher is preferred)",
+      "toggleFailed": "Could not change smart routing.",
+      "remaining": "{{percent}}% left",
+      "remainingHint": "Remaining share of the longest limit window",
+      "limit": {
+        "weekly": "Weekly limit",
+        "monthly": "Monthly limit"
+      },
+      "limitSource": {
+        "auto": "auto",
+        "config": "set manually"
+      },
+      "limitSourceHint": {
+        "auto": "Detected from the plan's limit windows",
+        "config": "Set in the plan editor"
+      },
+      "override": {
+        "prefer": "Preferred",
+        "avoid": "Avoided"
+      },
+      "reset": {
+        "in": "Full reset in {{time}}",
+        "estimated": "≈ full reset in {{time}} (not started)",
+        "due": "Full reset due now",
+        "unknown": "Reset time unknown"
+      },
+      "status": {
+        "serving": "Serving now",
+        "next": "Next up",
+        "standby": "Standby",
+        "paused": "Paused",
+        "pausedDetail": "Paused — {{window}} limit hit, back in {{time}}",
+        "pausedWindow": "Paused — {{window}} limit hit",
+        "pausedUntil": "Paused — back in {{time}}",
+        "disabled": "Disabled"
+      },
+      "window": {
+        "fiveHour": "5-hour",
+        "weekly": "weekly",
+        "monthly": "monthly",
+        "daily": "daily"
+      },
+      "reason": {
+        "manual": "Ordered by manual priority (smart routing off)",
+        "disabled": "Credential is disabled, so it gets no traffic",
+        "paused": "A limit is exhausted — skipped until it resets",
+        "preferred": "Preferred by you — used before other plans",
+        "avoided": "Avoided by you — used after other plans",
+        "weeklySoonest": "Weekly-only plan resetting soonest — use it before it resets",
+        "weeklyLater": "Weekly-only plan; resets after the ones above",
+        "weeklyNotStarted": "Weekly-only plan; its window hasn't started yet",
+        "monthlySoonest": "Monthly cap resetting soonest",
+        "monthlyAfterWeekly": "Monthly cap — used after weekly plans",
+        "monthlyLater": "Monthly cap; resets after the ones above",
+        "monthlyNotStarted": "Monthly cap; its cycle hasn't started yet",
+        "tieHeadroom": "Same reset as the one above; ordered by remaining headroom"
+      },
+      "card": {
+        "rank": "Routing #{{rank}}",
+        "paused": "Paused",
+        "disabled": "Disabled",
+        "rankHint": "Position in the routing order",
+        "creditsLeft": "{{value}} credits left",
+        "usageUnknown": "Usage unknown"
+      }
+    }
   }
 }

@@ -2594,6 +2594,97 @@
     "projectedDetail": "On pace for ≈{{percent}}% by reset",
     "projectedDetailValue": "On pace for ≈{{percent}}% ({{value}}) by reset",
     "projectedOutDetail": "On pace to run out {{time}}, before reset",
-    "projectionHint": "Projected by extrapolating this window's current pace to its reset."
+    "projectionHint": "Projected by extrapolating this window's current pace to its reset.",
+    "limitType": "限額類型",
+    "limitTypeAuto": "自動偵測",
+    "limitTypeWeekly": "僅每週限額",
+    "limitTypeMonthly": "每月限額",
+    "limitTypeHint": "僅有每週限額的方案會先於有每月上限的方案使用：每月額度更稀缺，而每週未用完的額度會在重置時作廢。",
+    "routingMode": "路由",
+    "routingAuto": "自動",
+    "routingPrefer": "優先 — 最先使用",
+    "routingAvoid": "避免 — 最後使用",
+    "routingHint": "覆寫此方案憑證在智慧路由中的位置。限額耗盡的憑證一律會暫停，直到重置。",
+    "routing": {
+      "title": "路由順序",
+      "explainer": "請求優先送往 #1；當它達到限額時，由下一個接手。",
+      "smartRouting": "智慧路由",
+      "smartRoutingHint": "智慧路由：依限額與重置時間自動排序方案憑證",
+      "updated": "更新於 {{time}}",
+      "summary": "{{active}} 個可用 · {{paused}} 個暫停",
+      "rankLabel": "第 {{rank}} 位",
+      "manualNote": "智慧路由已關閉 — 請求依每個憑證的手動優先順序分配。",
+      "empty": "尚無可路由的方案憑證。將憑證指派到方案後即可排序。",
+      "inactiveGroup": "已暫停與已停用（{{count}}）",
+      "outsideNote": "不屬於任何方案的憑證會在這些之後，依手動優先順序使用。",
+      "showAdvanced": "顯示優先順序數值",
+      "hideAdvanced": "隱藏優先順序數值",
+      "priority": "優先順序 {{value}}",
+      "priorityHint": "排程器實際優先順序（越高越優先）",
+      "toggleFailed": "無法變更智慧路由。",
+      "remaining": "剩餘 {{percent}}%",
+      "remainingHint": "最長限額視窗的剩餘比例",
+      "limit": {
+        "weekly": "每週限額",
+        "monthly": "每月限額"
+      },
+      "limitSource": {
+        "auto": "自動",
+        "config": "手動設定"
+      },
+      "limitSourceHint": {
+        "auto": "依方案的限額視窗偵測",
+        "config": "在方案編輯器中設定"
+      },
+      "override": {
+        "prefer": "優先",
+        "avoid": "避免"
+      },
+      "reset": {
+        "in": "{{time}} 後完全重置",
+        "estimated": "≈ {{time}} 後完全重置（未開始）",
+        "due": "即將完全重置",
+        "unknown": "重置時間未知"
+      },
+      "status": {
+        "serving": "正在服務",
+        "next": "下一個",
+        "standby": "待命",
+        "paused": "已暫停",
+        "pausedDetail": "已暫停 — 已達{{window}}限額，{{time}} 後恢復",
+        "pausedWindow": "已暫停 — 已達{{window}}限額",
+        "pausedUntil": "已暫停 — {{time}} 後恢復",
+        "disabled": "已停用"
+      },
+      "window": {
+        "fiveHour": "5 小時",
+        "weekly": "每週",
+        "monthly": "每月",
+        "daily": "每日"
+      },
+      "reason": {
+        "manual": "依手動優先順序排序（智慧路由已關閉）",
+        "disabled": "憑證已停用，不會接收流量",
+        "paused": "某個限額已耗盡 — 在重置前略過",
+        "preferred": "由你設為優先 — 先於其他方案使用",
+        "avoided": "由你設為避免 — 在其他方案之後使用",
+        "weeklySoonest": "僅每週限額且最早重置 — 在重置前用掉",
+        "weeklyLater": "僅每週限額；重置晚於上方憑證",
+        "weeklyNotStarted": "僅每週限額；視窗尚未開始",
+        "monthlySoonest": "每月上限且最早重置",
+        "monthlyAfterWeekly": "每月上限 — 在每週方案之後使用",
+        "monthlyLater": "每月上限；重置晚於上方憑證",
+        "monthlyNotStarted": "每月上限；週期尚未開始",
+        "tieHeadroom": "與上方同時重置；依剩餘額度排序"
+      },
+      "card": {
+        "rank": "路由 #{{rank}}",
+        "paused": "已暫停",
+        "disabled": "已停用",
+        "rankHint": "在路由順序中的位置",
+        "creditsLeft": "剩餘 {{value}} 額度",
+        "usageUnknown": "用量未知"
+      }
+    }
   }
 }
