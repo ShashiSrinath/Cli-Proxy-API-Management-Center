@@ -261,6 +261,16 @@
       "matched": "Matched OpenRouter model: {{id}}",
       "unmatched": "No OpenRouter model matched",
       "splitTitle": "Input · output · cache read · cache write (USD per 1M tokens)",
+      "minPrompt": "≥{{count}} prompt tokens",
+      "days": {
+        "sunday": "Sun",
+        "monday": "Mon",
+        "tuesday": "Tue",
+        "wednesday": "Wed",
+        "thursday": "Thu",
+        "friday": "Fri",
+        "saturday": "Sat"
+      },
       "unpriced": "No price"
     },
     "models": {

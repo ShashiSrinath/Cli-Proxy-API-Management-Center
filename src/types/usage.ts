@@ -34,6 +34,18 @@ export interface ModelPrice {
   output: number;
   cacheRead: number;
   cacheWrite: number;
+  conditional?: ConditionalPrice[];
+}
+
+export interface ConditionalPrice {
+  utcDays: string[];
+  utcStart?: number;
+  utcEnd?: number;
+  minPromptTokens: number;
+  input: number;
+  output: number;
+  cacheRead: number;
+  cacheWrite: number;
 }
 
 export interface UsageModelKeyShare {
@@ -96,6 +108,7 @@ export interface PricingCatalogEntry {
   output: number;
   cacheRead: number;
   cacheWrite: number;
+  conditional?: ConditionalPrice[];
 }
 
 /** Mirrors config usage-tracking.pricing.overrides values. Undefined fields are unset. */

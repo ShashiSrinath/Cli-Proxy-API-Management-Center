@@ -260,6 +260,16 @@
       "matched": "Совпавшая модель OpenRouter: {{id}}",
       "unmatched": "Совпадение с моделью OpenRouter не найдено",
       "splitTitle": "Вход · выход · чтение кэша · запись в кэш (USD за 1 млн токенов)",
+      "minPrompt": "≥{{count}} токенов запроса",
+      "days": {
+        "sunday": "Вс",
+        "monday": "Пн",
+        "tuesday": "Вт",
+        "wednesday": "Ср",
+        "thursday": "Чт",
+        "friday": "Пт",
+        "saturday": "Сб"
+      },
       "unpriced": "Без цены"
     },
     "models": {

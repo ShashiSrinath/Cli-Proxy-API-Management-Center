@@ -34,6 +34,16 @@ export interface PlansModelRow {
     output: number;
     cache_read: number;
     cache_write: number;
+    conditional?: Array<{
+      utc_days?: string[];
+      utc_start?: number;
+      utc_end?: number;
+      min_prompt_tokens?: number;
+      input: number;
+      output: number;
+      cache_read: number;
+      cache_write: number;
+    }>;
   };
 }
 export interface PlanWindow {

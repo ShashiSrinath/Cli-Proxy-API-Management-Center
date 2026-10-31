@@ -87,6 +87,21 @@ function normalizeSeries(raw: unknown): UsageSeriesPoint[] {
     .map((point) => ({ t: textOf(point.t), ...normalizeStats(point) }));
 }
 
+function normalizeConditional(raw: unknown) {
+  return listOf(raw)
+    .filter(isRecord)
+    .map((entry) => ({
+      utcDays: listOf(entry.utc_days).map(textOf),
+      utcStart: optionalNumberOf(entry.utc_start),
+      utcEnd: optionalNumberOf(entry.utc_end),
+      minPromptTokens: countOf(entry.min_prompt_tokens),
+      input: countOf(entry.input),
+      output: countOf(entry.output),
+      cacheRead: countOf(entry.cache_read),
+      cacheWrite: countOf(entry.cache_write),
+    }));
+}
+
 function normalizePrice(raw: unknown): ModelPrice {
   const record = recordOf(raw);
   const source = PRICE_SOURCES.find((candidate) => candidate === record.source) ?? 'none';
@@ -97,6 +112,9 @@ function normalizePrice(raw: unknown): ModelPrice {
     output: countOf(record.output),
     cacheRead: countOf(record.cache_read),
     cacheWrite: countOf(record.cache_write),
+    ...(Array.isArray(record.conditional)
+      ? { conditional: normalizeConditional(record.conditional) }
+      : {}),
   };
 }
 
@@ -202,6 +220,9 @@ function normalizeCatalog(raw: unknown): PricingCatalogEntry[] {
       output: countOf(entry.output),
       cacheRead: countOf(entry.cache_read),
       cacheWrite: countOf(entry.cache_write),
+      ...(Array.isArray(entry.conditional)
+        ? { conditional: normalizeConditional(entry.conditional) }
+        : {}),
     }))
     .filter((entry) => entry.id !== '');
 }

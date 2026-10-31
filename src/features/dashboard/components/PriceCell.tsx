@@ -33,6 +33,33 @@ export function PriceCell({ model }: PriceCellProps) {
       ) : (
         <span className={styles.unpriced}>{t('usageDashboard.price.unpriced')}</span>
       )}
+      {price.conditional?.map((rate, index) => {
+        const time = (value: number) =>
+          `${String(Math.floor(value / 100)).padStart(2, '0')}:${String(value % 100).padStart(2, '0')}`;
+        const labels = [
+          rate.utcDays.map((day) => t(`usageDashboard.price.days.${day}`)).join(', '),
+          rate.utcStart !== undefined && rate.utcEnd !== undefined
+            ? `${time(rate.utcStart)}–${time(rate.utcEnd)} UTC`
+            : '',
+          rate.minPromptTokens
+            ? t('usageDashboard.price.minPrompt', { count: rate.minPromptTokens.toLocaleString() })
+            : '',
+        ]
+          .filter(Boolean)
+          .join(' · ');
+        return (
+          <span
+            className={styles.numbers}
+            key={`${labels}-${index}`}
+            title={t('usageDashboard.price.splitTitle')}
+          >
+            {labels}:{' '}
+            {[rate.input, rate.output, rate.cacheRead, rate.cacheWrite]
+              .map(formatPrice)
+              .join(' · ')}
+          </span>
+        );
+      })}
     </div>
   );
 }

@@ -261,6 +261,16 @@
       "matched": "相符的 OpenRouter 模型：{{id}}",
       "unmatched": "未找到相符的 OpenRouter 模型",
       "splitTitle": "輸入 · 輸出 · 快取讀取 · 快取寫入（美元/百萬 Token）",
+      "minPrompt": "提示詞 ≥{{count}} 個 Token",
+      "days": {
+        "sunday": "週日",
+        "monday": "週一",
+        "tuesday": "週二",
+        "wednesday": "週三",
+        "thursday": "週四",
+        "friday": "週五",
+        "saturday": "週六"
+      },
       "unpriced": "未計價"
     },
     "models": {

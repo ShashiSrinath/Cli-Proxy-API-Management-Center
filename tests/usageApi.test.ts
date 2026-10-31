@@ -455,3 +455,34 @@ describe('usage API endpoints', () => {
     });
   });
 });
+
+test('normalizes conditional rates in summaries and catalog', () => {
+  const conditional = [
+    {
+      utc_days: ['monday'],
+      utc_start: 100,
+      utc_end: 400,
+      min_prompt_tokens: 32000,
+      input: 1,
+      output: 2,
+      cache_read: 0.1,
+      cache_write: 0.2,
+    },
+  ];
+  const expected = [
+    {
+      utcDays: ['monday'],
+      utcStart: 100,
+      utcEnd: 400,
+      minPromptTokens: 32000,
+      input: 1,
+      output: 2,
+      cacheRead: 0.1,
+      cacheWrite: 0.2,
+    },
+  ];
+  const summary = normalizeUsageSummary({ models: [{ model: 'm', price: { conditional } }] });
+  expect(summary.models[0].price.conditional).toEqual(expected);
+  const pricing = normalizeUsagePricing({ catalog: [{ id: 'x/m', conditional }] });
+  expect(pricing.catalog[0].conditional).toEqual(expected);
+});
