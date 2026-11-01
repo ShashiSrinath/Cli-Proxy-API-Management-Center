@@ -108,7 +108,8 @@
     "config_management": "配置面板",
     "logs": "日志查看",
     "system_info": "中心信息",
-    "plans": "Plans"
+    "plans": "Plans",
+    "routing": "路由"
   },
   "nav_groups": {
     "operate": "运行",
@@ -129,7 +130,8 @@
     "logs": "请求追踪与排查",
     "config_management": "网关基础配置",
     "system_info": "运行与诊断信息",
-    "plans": "Subscription value"
+    "plans": "Subscription value",
+    "routing": "下一个服务的订阅"
   },
   "usageDashboard": {
     "title": "用量",
@@ -2658,6 +2660,43 @@
         "rankHint": "在路由顺序中的位置",
         "creditsLeft": "剩余 {{value}} 额度",
         "usageUnknown": "用量未知"
+      }
+    },
+    "openRouting": "路由顺序"
+  },
+  "routingPage": {
+    "title": "路由",
+    "description": "根据实时用量限额排序，决定下一个处理请求的订阅。",
+    "managePlans": "管理套餐",
+    "emptyTitle": "暂无订阅套餐",
+    "emptyDescription": "智能路由会对属于订阅套餐的凭证进行排序。添加一个套餐即可开始。",
+    "unsupportedTitle": "智能路由不可用",
+    "unsupportedDescription": "当前服务器尚未提供路由顺序，请更新后端以使用智能路由。",
+    "rulesTitle": "排序规则",
+    "rules": {
+      "paused": {
+        "title": "已达限额的排在最后",
+        "text": "任一限额窗口（5 小时、每周或每月）用尽的凭证会暂停，直到该窗口重置。"
+      },
+      "override": {
+        "title": "你的偏好设置",
+        "text": "设为“优先”的套餐总是排在最前，设为“避免”的套餐总是排在最后。可在套餐编辑器中修改。"
+      },
+      "weekly": {
+        "title": "仅周限额优先于月限额",
+        "text": "只有周限额的套餐会先于有月度上限的套餐使用，因为月度额度更稀缺。"
+      },
+      "reset": {
+        "title": "最早完全重置的优先",
+        "text": "在同一组内，最长限额窗口最早重置的凭证优先，避免即将重置的额度被浪费。"
+      },
+      "headroom": {
+        "title": "剩余额度多者优先",
+        "text": "重置时间相同时，剩余额度更多的凭证优先。"
+      },
+      "unplanned": {
+        "title": "无套餐的凭证排在之后",
+        "text": "它们保留手动优先级，仅在所有活跃的套餐凭证都不可用时使用。顺序每 2 分钟刷新一次。"
       }
     }
   }

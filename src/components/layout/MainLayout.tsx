@@ -29,6 +29,7 @@ import {
   IconSidebarQuota,
   IconSidebarStore,
   IconSidebarSystem,
+  IconNetwork,
   IconChevronDown,
 } from '@/components/ui/icons';
 import { INLINE_LOGO_JPEG } from '@/assets/logoInline';
@@ -66,6 +67,7 @@ const sidebarIcons: Record<string, ReactNode> = {
   config: <IconSidebarConfig size={18} />,
   logs: <IconSidebarLogs size={18} />,
   system: <IconSidebarSystem size={18} />,
+  routing: <IconNetwork size={18} />,
 };
 
 interface SidebarNavLinkItem {
@@ -648,6 +650,12 @@ export function MainLayout() {
           labelKey: 'nav.plans',
           metaKey: 'nav_meta.plans',
           icon: sidebarIcons.dashboard,
+        },
+        {
+          path: '/routing',
+          labelKey: 'nav.routing',
+          metaKey: 'nav_meta.routing',
+          icon: sidebarIcons.routing,
         },
         {
           path: '/quota',

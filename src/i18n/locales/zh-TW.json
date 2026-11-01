@@ -108,7 +108,8 @@
     "config_management": "設定面板",
     "logs": "記錄檢視",
     "system_info": "中心資訊",
-    "plans": "Plans"
+    "plans": "Plans",
+    "routing": "路由"
   },
   "nav_groups": {
     "operate": "運行",
@@ -129,7 +130,8 @@
     "logs": "請求追蹤與排查",
     "config_management": "閘道基礎設定",
     "system_info": "運行與診斷資訊",
-    "plans": "Subscription value"
+    "plans": "Subscription value",
+    "routing": "下一個服務的訂閱"
   },
   "usageDashboard": {
     "title": "用量",
@@ -2684,6 +2686,43 @@
         "rankHint": "在路由順序中的位置",
         "creditsLeft": "剩餘 {{value}} 額度",
         "usageUnknown": "用量未知"
+      }
+    },
+    "openRouting": "路由順序"
+  },
+  "routingPage": {
+    "title": "路由",
+    "description": "依即時用量限額排序，決定下一個處理請求的訂閱。",
+    "managePlans": "管理方案",
+    "emptyTitle": "尚無訂閱方案",
+    "emptyDescription": "智慧路由會對屬於訂閱方案的憑證進行排序。新增一個方案即可開始。",
+    "unsupportedTitle": "智慧路由無法使用",
+    "unsupportedDescription": "目前伺服器尚未提供路由順序，請更新後端以使用智慧路由。",
+    "rulesTitle": "排序規則",
+    "rules": {
+      "paused": {
+        "title": "已達限額的排在最後",
+        "text": "任一限額視窗（5 小時、每週或每月）用盡的憑證會暫停，直到該視窗重置。"
+      },
+      "override": {
+        "title": "你的偏好設定",
+        "text": "設為「優先」的方案一律排在最前，設為「避免」的方案一律排在最後。可在方案編輯器中修改。"
+      },
+      "weekly": {
+        "title": "僅週限額優先於月限額",
+        "text": "只有週限額的方案會先於有月度上限的方案使用，因為月度額度更稀缺。"
+      },
+      "reset": {
+        "title": "最早完全重置者優先",
+        "text": "在同一組內，最長限額視窗最早重置的憑證優先，避免即將重置的額度被浪費。"
+      },
+      "headroom": {
+        "title": "剩餘額度多者優先",
+        "text": "重置時間相同時，剩餘額度較多的憑證優先。"
+      },
+      "unplanned": {
+        "title": "無方案的憑證排在之後",
+        "text": "它們保留手動優先順序，僅在所有作用中的方案憑證都無法使用時才會使用。順序每 2 分鐘更新一次。"
       }
     }
   }

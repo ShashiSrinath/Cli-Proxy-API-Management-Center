@@ -1,0 +1,46 @@
+.rules {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+}
+
+.rulesTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.rulesList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.rule {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--text-secondary);
+
+  &::marker {
+    color: var(--primary-color);
+    font-weight: 700;
+  }
+}
+
+.ruleName {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.ruleText {
+  font-size: 13px;
+  line-height: 1.5;
+}

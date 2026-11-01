@@ -108,7 +108,8 @@
     "config_management": "Config Panel",
     "logs": "Logs Viewer",
     "system_info": "Management Center Info",
-    "plans": "Plans"
+    "plans": "Plans",
+    "routing": "Routing"
   },
   "nav_groups": {
     "operate": "Operate",
@@ -129,7 +130,8 @@
     "logs": "Request tracing",
     "config_management": "Gateway configuration",
     "system_info": "Runtime & diagnostics",
-    "plans": "Subscription value"
+    "plans": "Subscription value",
+    "routing": "Which subscription serves next"
   },
   "usageDashboard": {
     "title": "Usage",
@@ -2660,6 +2662,43 @@
         "rankHint": "Position in the routing order",
         "creditsLeft": "{{value}} credits left",
         "usageUnknown": "Usage unknown"
+      }
+    },
+    "openRouting": "Routing order"
+  },
+  "routingPage": {
+    "title": "Routing",
+    "description": "Which subscription serves requests next, ranked from live usage limits.",
+    "managePlans": "Manage plans",
+    "emptyTitle": "No subscription plans yet",
+    "emptyDescription": "Smart routing ranks the credentials that belong to your subscription plans. Add a plan to get started.",
+    "unsupportedTitle": "Smart routing is not available",
+    "unsupportedDescription": "This server does not report a routing order yet. Update the backend to use smart routing.",
+    "rulesTitle": "How the order is decided",
+    "rules": {
+      "paused": {
+        "title": "Limits hit go last",
+        "text": "A credential that has used up any limit window (5 hour, weekly or monthly) is paused until that window resets."
+      },
+      "override": {
+        "title": "Your overrides",
+        "text": "Plans set to Prefer always come first and plans set to Avoid always come last. Change this in the plan editor."
+      },
+      "weekly": {
+        "title": "Weekly-only before monthly",
+        "text": "Plans with only weekly limits are used before plans with a monthly cap, because monthly capacity is scarcer."
+      },
+      "reset": {
+        "title": "Soonest full reset first",
+        "text": "Within each group, the credential whose longest limit resets soonest goes first, so capacity that is about to reset is not wasted."
+      },
+      "headroom": {
+        "title": "More headroom breaks ties",
+        "text": "When resets match, the credential with more of its limit left goes first."
+      },
+      "unplanned": {
+        "title": "Credentials without a plan come after",
+        "text": "They keep their manual priority and are used once every active plan credential is unavailable. The order refreshes every 2 minutes."
       }
     }
   }

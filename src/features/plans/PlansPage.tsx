@@ -1,13 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Collapsible } from '@/components/ui/Collapsible';
 import { EmptyState } from '@/components/ui/EmptyState';
-import {
-  IconAlertTriangle,
-  IconPlus,
-  IconRefreshCw,
-} from '@/components/ui/icons';
+import { IconAlertTriangle, IconNetwork, IconPlus, IconRefreshCw } from '@/components/ui/icons';
 import {
   Table,
   TableBody,
@@ -27,7 +24,6 @@ import { BrandLogo } from './BrandLogo';
 import { PlanCard } from './PlanCard';
 import { PlanEditor } from './PlanEditor';
 import { routingByAuthId } from './routing';
-import { RoutingPanel } from './RoutingPanel';
 import {
   estimate,
   formatUsd,
@@ -40,6 +36,7 @@ import styles from './PlansPage.module.scss';
 
 export function PlansPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const connected = useAuthStore((s) => s.connectionStatus === 'connected');
   const apiBase = useAuthStore((s) => s.apiBase);
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
@@ -50,7 +47,6 @@ export function PlansPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [editor, setEditor] = useState<Partial<SubscriptionPlan> | null>(null);
-  const [smartPending, setSmartPending] = useState<boolean | null>(null);
 
   const request = useRef(0);
   const unassignedRef = useRef<HTMLElement>(null);
@@ -86,7 +82,6 @@ export function PlansPage() {
     return () => {
       setData(null);
       setEditor(null);
-      setSmartPending(null);
     };
   }, [apiBase, connected]);
 
@@ -105,21 +100,6 @@ export function PlansPage() {
     }
   };
 
-  const toggleSmartRouting = async (enabled: boolean) => {
-    const revision = apiClient.getConnectionRevision();
-    setSmartPending(enabled);
-    try {
-      await usagePlansApi.setSmartRouting(enabled);
-      if (revision !== apiClient.getConnectionRevision()) return;
-      await refresh();
-    } catch (e) {
-      if (revision !== apiClient.getConnectionRevision()) return;
-      setError(e instanceof Error ? e.message : t('plans.routing.toggleFailed'));
-    } finally {
-      if (revision === apiClient.getConnectionRevision()) setSmartPending(null);
-    }
-  };
-
   const routing = data?.routing;
   const routingIndex = useMemo(() => routingByAuthId(routing), [routing]);
 
@@ -135,7 +115,7 @@ export function PlansPage() {
     if (!data) return 'neutral';
     return getMultiplierTier(
       data.totals.multiplier,
-      (data.totals.value_usd > 0) || (data.plans ?? []).some((p) => (p.totals?.requests ?? 0) > 0),
+      data.totals.value_usd > 0 || (data.plans ?? []).some((p) => (p.totals?.requests ?? 0) > 0),
       data.totals.price_usd
     );
   }, [data]);
@@ -199,6 +179,11 @@ export function PlansPage() {
             <IconRefreshCw size={14} className={loading ? styles.spin : undefined} />
           </Button>
 
+          <Button variant="secondary" onClick={() => navigate('/routing')}>
+            <IconNetwork size={15} />
+            {t('plans.openRouting')}
+          </Button>
+
           <Button onClick={() => setEditor({})}>
             <IconPlus size={15} />
             {t('plans.addPlan')}
@@ -236,9 +221,7 @@ export function PlansPage() {
           <section className={styles.kpiRow} aria-label={t('plans.title')}>
             <article className={styles.kpiTile}>
               <span className={styles.kpiLabel}>{t('plans.kpi.cost')}</span>
-              <strong className={styles.kpiValue}>
-                {formatUsd(data.totals.price_usd)}
-              </strong>
+              <strong className={styles.kpiValue}>{formatUsd(data.totals.price_usd)}</strong>
               <span className={styles.kpiSub}>
                 {t('plans.kpi.costSub', { count: data.plans.length })}
               </span>
@@ -246,9 +229,7 @@ export function PlansPage() {
 
             <article className={styles.kpiTile}>
               <span className={styles.kpiLabel}>{t('plans.kpi.value')}</span>
-              <strong className={styles.kpiValue}>
-                {estimate(data.totals.value_usd)}
-              </strong>
+              <strong className={styles.kpiValue}>{estimate(data.totals.value_usd)}</strong>
               <span className={styles.kpiSub}>{t('plans.kpi.valueSub')}</span>
             </article>
 
@@ -266,21 +247,12 @@ export function PlansPage() {
                 {estimate(data.totals.projected_value_usd)}
               </strong>
               <span className={styles.kpiSub}>
-                {projectedMultiplier ? `${projectedMultiplier} ${t('plans.kpi.projectedReturn')}` : '—'}
+                {projectedMultiplier
+                  ? `${projectedMultiplier} ${t('plans.kpi.projectedReturn')}`
+                  : '—'}
               </span>
             </article>
           </section>
-
-          {/* Smart routing order */}
-          {data.routing && (
-            <RoutingPanel
-              routing={data.routing}
-              pendingEnabled={smartPending}
-              busy={smartPending !== null}
-              disabled={!connected}
-              onToggle={(enabled) => void toggleSmartRouting(enabled)}
-            />
-          )}
 
           {/* Warning callout for unassigned usage */}
           {(data.totals.unassigned_value_usd ?? 0) > 0 && (
@@ -435,10 +407,7 @@ export function PlansPage() {
 
           {/* 7. Collapsible accuracy notes footer */}
           <footer className={styles.footer}>
-            <Collapsible
-              label={t('plans.accuracyTitle')}
-              hint={t('plans.accuracyHint')}
-            >
+            <Collapsible label={t('plans.accuracyTitle')} hint={t('plans.accuracyHint')}>
               <div className={styles.accuracyDetails}>
                 <p className={styles.accuracyText}>{t('plans.accuracy')}</p>
                 <div className={styles.pricingMetaGrid}>
