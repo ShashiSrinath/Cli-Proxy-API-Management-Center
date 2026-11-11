@@ -133,6 +133,21 @@
     "plans": "Subscription value",
     "routing": "下一个服务的订阅"
   },
+  "keyBudgets": {
+    "label": "消费限额",
+    "blocked": "已拦截",
+    "unavailable": "未启用统计",
+    "trackingDisabled": "此服务器已关闭用量统计，设置了消费限额的密钥会被直接拒绝。",
+    "resetsIn": "{{time}}重置",
+    "period": {
+      "day": "每日",
+      "week": "每周",
+      "month": "每月"
+    },
+    "states": {
+      "unavailable": "暂时无法获取实时消费"
+    }
+  },
   "usageDashboard": {
     "title": "用量",
     "description": "按客户端 API 密钥统计请求数、Token 用量和预估费用。",
@@ -1676,6 +1691,24 @@
         "providers_summary": "提供商：{{providers}}",
         "providers_custom_placeholder": "其他提供商 ID（例如插件 ID）",
         "providers_custom_add": "添加提供商",
+        "models_label": "允许的模型",
+        "models_hint": "以逗号分隔的模型名称模式。留空表示允许所有模型；使用星号作为通配符，例如 deepseek-* 或 kimi-k2*。保存在 access.api-key-models。",
+        "models_all": "所有模型",
+        "models_summary": "模型：{{models}}",
+        "models_placeholder": "deepseek-*, kimi-k2*",
+        "models_remove": "移除 {{model}}",
+        "limits_label": "消费限额（API 等价美元）",
+        "limits_daily": "每日",
+        "limits_weekly": "每周",
+        "limits_monthly": "每月",
+        "limits_placeholder": "不限额",
+        "limits_timezone": "时区",
+        "limits_timezone_suggest": "使用 {{timezone}}",
+        "limits_hint": "留空表示该窗口不限额。时区（IANA 名称，留空表示 UTC）决定每日、每周（从周一开始）和每月的起点。窗口用尽后请求会以 HTTP 429 拒绝，直到窗口重置。保存在 access.api-key-limits。",
+        "limits_summary": "限额：{{limits}}",
+        "limits_footnote": "消费金额由 OpenRouter 标价估算；未定价模型按 $0 计算，因此请配合模型白名单让预算密钥只使用已定价模型。预算在请求开始前检查，并发请求可能略微超出。",
+        "limits_error_amount": "消费限额必须为正数",
+        "limits_error_timezone": "未知时区，请使用 IANA 名称，例如 Asia/Kolkata",
         "strength": {
           "label": "API 密钥强度",
           "empty": "待输入",

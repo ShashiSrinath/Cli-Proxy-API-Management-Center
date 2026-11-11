@@ -158,6 +158,60 @@
   }
 }
 
+/* 模型的 `*` 通配提示：等宽，因为用户要逐字读模式 */
+.apiKeyModelsHintCode {
+  font-family: $font-mono;
+  font-size: 11px;
+}
+
+.apiKeyLimitGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.apiKeyLimitField {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+
+  > span {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+  }
+}
+
+.apiKeyLimitCurrency {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  > span {
+    position: absolute;
+    left: 10px;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    pointer-events: none;
+  }
+
+  :global(.input) {
+    padding-left: 22px;
+  }
+}
+
+.apiKeyRowLimits {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
 /* 强度参考条：四段承载档位，颜色承载严重度。
    段的填充走 scaleX（只碰 transform），键入时逐字重算也不掉帧。 */
 

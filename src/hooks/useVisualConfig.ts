@@ -21,6 +21,15 @@ import { DEFAULT_VISUAL_VALUES } from '@/types/visualConfig';
 import { assertConfigListsUnchanged, ConfigDraftConflictError } from '@/services/api/configPatch';
 import { areApiKeyNamesEqual } from '@/services/api/apiKeyNames';
 import {
+  areApiKeyLimitsEqual,
+  areApiKeyModelsEqual,
+  hasApiKeyLimit,
+  normalizeApiKeyModelList,
+  parseApiKeyLimits,
+  parseApiKeyModels,
+  serializeApiKeyLimit,
+} from '@/features/config/apiKeyModels';
+import {
   areModelFallbackRulesEqual,
   parseModelFallbackEnabled,
   parseModelFallbackRules,
@@ -1305,6 +1314,18 @@ function getNextDirtyFields(
       JSON.stringify(nextValues.apiKeyProviders) === JSON.stringify(baselineValues.apiKeyProviders)
     );
   }
+  if (Object.prototype.hasOwnProperty.call(patch, 'apiKeyModels')) {
+    updateDirty(
+      'apiKeyModels',
+      areApiKeyModelsEqual(nextValues.apiKeyModels, baselineValues.apiKeyModels)
+    );
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'apiKeyLimits')) {
+    updateDirty(
+      'apiKeyLimits',
+      areApiKeyLimitsEqual(nextValues.apiKeyLimits, baselineValues.apiKeyLimits)
+    );
+  }
   if (Object.prototype.hasOwnProperty.call(patch, 'apiKeyNames')) {
     updateDirty(
       'apiKeyNames',
@@ -1531,6 +1552,8 @@ function parseVisualValuesFromYaml(yamlContent: string): VisualConfigValues {
     authDir: typeof v8Oauth?.['auth-dir'] === 'string' ? v8Oauth?.['auth-dir'] : '',
     apiKeysText: parseApiKeysText(asRecord(parsed.access)?.['api-keys']),
     apiKeyProviders: parseApiKeyProviders(asRecord(parsed.access)?.['api-key-providers']),
+    apiKeyModels: parseApiKeyModels(asRecord(parsed.access)?.['api-key-models']),
+    apiKeyLimits: parseApiKeyLimits(asRecord(parsed.access)?.['api-key-limits']),
     // Names are served by access.api-key-names, outside this YAML draft.
     apiKeyNames: {},
     pluginsEnabled: Boolean(plugins?.enabled),
@@ -1828,7 +1851,12 @@ export function useVisualConfig() {
             doc.deleteIn(['access', 'api-keys']);
           }
         }
-        if (dirtyFields.has('apiKeysText') || dirtyFields.has('apiKeyProviders')) {
+        if (
+          dirtyFields.has('apiKeysText') ||
+          dirtyFields.has('apiKeyProviders') ||
+          dirtyFields.has('apiKeyModels') ||
+          dirtyFields.has('apiKeyLimits')
+        ) {
           // Restrictions only apply to configured keys; drop entries for removed keys.
           const configuredKeys = new Set(
             values.apiKeysText
@@ -1845,6 +1873,29 @@ export function useVisualConfig() {
             doc.setIn(['access', 'api-key-providers'], apiKeyProviders);
           } else if (docHas(doc, ['access', 'api-key-providers'])) {
             doc.deleteIn(['access', 'api-key-providers']);
+          }
+
+          const apiKeyModels: Record<string, string[]> = {};
+          Object.entries(values.apiKeyModels).forEach(([key, patterns]) => {
+            const normalized = normalizeApiKeyModelList(patterns);
+            if (configuredKeys.has(key) && normalized.length > 0) apiKeyModels[key] = normalized;
+          });
+          if (Object.keys(apiKeyModels).length > 0) {
+            doc.setIn(['access', 'api-key-models'], apiKeyModels);
+          } else if (docHas(doc, ['access', 'api-key-models'])) {
+            doc.deleteIn(['access', 'api-key-models']);
+          }
+
+          const apiKeyLimits: Record<string, Record<string, unknown>> = {};
+          Object.entries(values.apiKeyLimits).forEach(([key, limit]) => {
+            if (!configuredKeys.has(key) || !hasApiKeyLimit(limit)) return;
+            const serialized = serializeApiKeyLimit(limit);
+            if (Object.keys(serialized).length > 0) apiKeyLimits[key] = serialized;
+          });
+          if (Object.keys(apiKeyLimits).length > 0) {
+            doc.setIn(['access', 'api-key-limits'], apiKeyLimits);
+          } else if (docHas(doc, ['access', 'api-key-limits'])) {
+            doc.deleteIn(['access', 'api-key-limits']);
           }
         }
 

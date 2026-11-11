@@ -11,6 +11,8 @@ import {
   TableRow,
 } from '@/components/ui/Table';
 import { useNow } from '@/hooks/useNow';
+import { KeyBudgetMeters } from '@/features/config/components/blocks/KeyBudgetMeters';
+import type { KeyBudgetRow } from '@/types/keyBudgets';
 import type { UsageKeyRow } from '@/types/usage';
 import { formatCompactNumber, formatDateTimeValue, formatPercent } from '@/utils/format';
 import { formatRelativeInstant } from '@/utils/quota/relativeTime';
@@ -57,13 +59,23 @@ interface KeysTableProps {
   /** Range-wide cost, the denominator for each key's share bar. */
   totalCostUsd: number;
   locale: string;
+  /** Live budget rows keyed by usage key id; absent when the endpoint is unavailable. */
+  budgetsById?: Map<string, KeyBudgetRow>;
+  /** Usage tracking is off, so budgeted keys are blocked outright. */
+  budgetsDisabled?: boolean;
 }
 
 /**
  * One row per API key, sortable, with an inline per-model breakdown. Idle keys stay listed
  * (dimmed) so a configured key with no traffic is still visible.
  */
-export function KeysTable({ keys, totalCostUsd, locale }: KeysTableProps) {
+export function KeysTable({
+  keys,
+  totalCostUsd,
+  locale,
+  budgetsById,
+  budgetsDisabled = false,
+}: KeysTableProps) {
   const { t } = useTranslation();
   const [sort, setSort] = useState<KeySort>(DEFAULT_KEY_SORT);
   const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(() => new Set());
@@ -149,6 +161,8 @@ export function KeysTable({ keys, totalCostUsd, locale }: KeysTableProps) {
               unattributedLabel={unattributedLabel}
               totalCostUsd={totalCostUsd}
               locale={locale}
+              budget={budgetsById?.get(row.id)}
+              budgetsDisabled={budgetsDisabled}
               expanded={expandedIds.has(row.id)}
               onToggle={() => toggleExpanded(row.id)}
             />
@@ -164,6 +178,8 @@ interface KeyRowsProps {
   unattributedLabel: string;
   totalCostUsd: number;
   locale: string;
+  budget?: KeyBudgetRow;
+  budgetsDisabled: boolean;
   expanded: boolean;
   onToggle: () => void;
 }
@@ -174,6 +190,8 @@ function KeyRows({
   unattributedLabel,
   totalCostUsd,
   locale,
+  budget,
+  budgetsDisabled,
   expanded,
   onToggle,
 }: KeyRowsProps) {
@@ -232,6 +250,14 @@ function KeyRows({
             <div className={styles.names}>
               <span className={styles.name}>{title}</span>
               {masked && <code className={styles.masked}>{masked}</code>}
+              {budget &&
+                (budget.windows.length > 0 || (budgetsDisabled && budget.limits !== null)) && (
+                  <KeyBudgetMeters
+                    windows={budget.windows}
+                    exceeded={budget.exceeded}
+                    disabled={budgetsDisabled}
+                  />
+                )}
               {!row.configured && !isUnattributed && (
                 <span className={styles.removed} title={t('usageDashboard.keys.removedHint')}>
                   {t('usageDashboard.keys.removed')}

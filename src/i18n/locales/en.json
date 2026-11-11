@@ -133,6 +133,21 @@
     "plans": "Subscription value",
     "routing": "Which subscription serves next"
   },
+  "keyBudgets": {
+    "label": "Spend limits",
+    "blocked": "Blocked",
+    "unavailable": "Tracking off",
+    "trackingDisabled": "Usage tracking is disabled on this server, so keys with spend limits are rejected.",
+    "resetsIn": "resets {{time}}",
+    "period": {
+      "day": "Daily",
+      "week": "Weekly",
+      "month": "Monthly"
+    },
+    "states": {
+      "unavailable": "Live spend is unavailable"
+    }
+  },
   "usageDashboard": {
     "title": "Usage",
     "description": "Requests, tokens and estimated cost per client API key.",
@@ -1678,6 +1693,24 @@
         "providers_summary": "Providers: {{providers}}",
         "providers_custom_placeholder": "Other provider id (for example a plugin id)",
         "providers_custom_add": "Add provider",
+        "models_label": "Allowed models",
+        "models_hint": "Comma-separated model name patterns. Empty allows every model; use the asterisk as a wildcard, for example deepseek-* or kimi-k2*. Saved to access.api-key-models.",
+        "models_all": "All models",
+        "models_summary": "Models: {{models}}",
+        "models_placeholder": "deepseek-*, kimi-k2*",
+        "models_remove": "Remove {{model}}",
+        "limits_label": "Spend limits (API-equivalent USD)",
+        "limits_daily": "Daily",
+        "limits_weekly": "Weekly",
+        "limits_monthly": "Monthly",
+        "limits_placeholder": "No cap",
+        "limits_timezone": "Timezone",
+        "limits_timezone_suggest": "Use {{timezone}}",
+        "limits_hint": "Empty means no cap for that window. The timezone (IANA name, empty = UTC) decides when the day, week (from Monday) and month start. Exhausted windows reject requests with HTTP 429 until they reset. Saved to access.api-key-limits.",
+        "limits_summary": "Limits: {{limits}}",
+        "limits_footnote": "Spend is estimated from OpenRouter list prices; unpriced models count as $0, so keep budgeted keys on priced models with the model allow-list. Budgets are checked before a request starts, so concurrent requests can overshoot slightly.",
+        "limits_error_amount": "Spend limits must be positive numbers",
+        "limits_error_timezone": "Unknown timezone; use an IANA name such as Asia/Kolkata",
         "strength": {
           "label": "API key strength",
           "empty": "Not entered",

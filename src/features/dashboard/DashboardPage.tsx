@@ -11,6 +11,7 @@ import { KpiRow } from './components/KpiRow';
 import { PricingPanel } from './components/PricingPanel';
 import { UsageChart } from './components/UsageChart';
 import { UsageHeader } from './components/UsageHeader';
+import { useKeyBudgetsById } from './hooks/useKeyBudgetsById';
 import { useUsageSummary } from './hooks/useUsageSummary';
 import { buildKeyTitles, hasUsage } from './utils';
 import styles from './DashboardPage.module.scss';
@@ -20,6 +21,7 @@ export function DashboardPage() {
   const locale = i18n.language;
   const { summary, range, setRange, timeZone, loading, error, connected, refresh } =
     useUsageSummary();
+  const { enabled: budgetsEnabled, byId: budgetsById } = useKeyBudgetsById();
 
   useHeaderRefresh(refresh, connected);
 
@@ -90,7 +92,13 @@ export function DashboardPage() {
           title={t('usageDashboard.states.emptyTitle')}
           description={t('usageDashboard.states.emptyDescription')}
         />
-        <KeysTable keys={summary.keys} totalCostUsd={summary.totals.costUsd} locale={locale} />
+        <KeysTable
+          keys={summary.keys}
+          totalCostUsd={summary.totals.costUsd}
+          locale={locale}
+          budgetsById={budgetsById}
+          budgetsDisabled={!budgetsEnabled}
+        />
         {pricingPanel}
       </>
     );
@@ -106,7 +114,13 @@ export function DashboardPage() {
         timeZone={timeZone}
         locale={locale}
       />
-      <KeysTable keys={summary.keys} totalCostUsd={summary.totals.costUsd} locale={locale} />
+      <KeysTable
+        keys={summary.keys}
+        totalCostUsd={summary.totals.costUsd}
+        locale={locale}
+        budgetsById={budgetsById}
+        budgetsDisabled={!budgetsEnabled}
+      />
       <Card title={t('usageDashboard.models.title')}>
         <ModelTable
           rows={summary.models}

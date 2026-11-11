@@ -126,6 +126,17 @@ export type ModelFallbackRule = {
   fallbackReasoningEffort: string;
 };
 
+/**
+ * Per-key spend caps at access.api-key-limits. Missing or non-positive amounts mean "no cap"
+ * for that window; `timezone` is an IANA zone for the window boundaries (empty = UTC).
+ */
+export type ApiKeyLimit = {
+  dailyUsd?: number;
+  weeklyUsd?: number;
+  monthlyUsd?: number;
+  timezone?: string;
+};
+
 /** UI draft keys; YAML persistence uses the v8 tree, not these flattened names. */
 export type VisualConfigValues = {
   trustedProxies: string[];
@@ -179,6 +190,10 @@ export type VisualConfigValues = {
   apiKeysText: string;
   /** Per-key upstream provider allow-lists at access.api-key-providers. Missing keys are unrestricted. */
   apiKeyProviders: Record<string, string[]>;
+  /** Per-key model allow-lists at access.api-key-models (`*` globs). Missing keys are unrestricted. */
+  apiKeyModels: Record<string, string[]>;
+  /** Per-key USD spend caps at access.api-key-limits. Missing keys are uncapped. */
+  apiKeyLimits: Record<string, ApiKeyLimit>;
   /** Display names keyed by raw client key. Saved via access.api-key-names, not the YAML draft. */
   apiKeyNames: Record<string, string>;
   pluginsEnabled: boolean;
@@ -289,6 +304,8 @@ export const DEFAULT_VISUAL_VALUES: VisualConfigValues = {
   authDir: '',
   apiKeysText: '',
   apiKeyProviders: {},
+  apiKeyModels: {},
+  apiKeyLimits: {},
   apiKeyNames: {},
   pluginsEnabled: false,
   pluginStoreSources: [],

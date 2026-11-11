@@ -1,0 +1,93 @@
+/* 客户端密钥预算表：紧凑的 `$已花 / $上限` 计量条。
+   与仪表盘 .shareTrack 同一套几何（4px 药丸轨道），填充只走 transform。 */
+
+.meters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.blocked {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border: 1px solid var(--warning-border);
+  border-radius: 999px;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.meter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 2px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-secondary) 60%, transparent);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.meterExceeded {
+  border-color: var(--warning-border);
+  color: var(--warning-text);
+}
+
+.period {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.meterExceeded .period {
+  color: var(--warning-text);
+}
+
+.amount {
+  font-family: $font-mono;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.track {
+  position: relative;
+  display: block;
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--bg-tertiary);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--viz-success);
+  transform-origin: left center;
+  transition: transform var(--dur-hover) var(--ease-out-strong);
+}
+
+.fillExceeded {
+  background: var(--viz-failure);
+}
+
+.reset {
+  color: var(--text-tertiary);
+  font-size: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill {
+    transition: none;
+  }
+}
