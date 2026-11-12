@@ -198,6 +198,7 @@ function normalizeOverride(raw: RawRecord): ModelPriceOverride {
   if (cacheRead !== undefined) override.cacheRead = cacheRead;
   const cacheWrite = optionalNumberOf(raw['cache-write']);
   if (cacheWrite !== undefined) override.cacheWrite = cacheWrite;
+  if (Array.isArray(raw.tiers) && raw.tiers.length > 0) override.tiers = raw.tiers;
   return override;
 }
 
@@ -246,15 +247,16 @@ const isSetPrice = (value: number | undefined): value is number =>
 /** Converts camelCase overrides to the config field names; unset and non-finite values are omitted. */
 function serializeOverrides(
   overrides: Record<string, ModelPriceOverride>
-): Record<string, Record<string, string | number>> {
-  const body: Record<string, Record<string, string | number>> = {};
+): Record<string, Record<string, string | number | unknown[]>> {
+  const body: Record<string, Record<string, string | number | unknown[]>> = {};
   Object.entries(overrides).forEach(([pattern, override]) => {
-    const entry: Record<string, string | number> = {};
+    const entry: Record<string, string | number | unknown[]> = {};
     if (override.openrouterId !== undefined) entry['openrouter-id'] = override.openrouterId;
     if (isSetPrice(override.input)) entry.input = override.input;
     if (isSetPrice(override.output)) entry.output = override.output;
     if (isSetPrice(override.cacheRead)) entry['cache-read'] = override.cacheRead;
     if (isSetPrice(override.cacheWrite)) entry['cache-write'] = override.cacheWrite;
+    if (override.tiers && override.tiers.length > 0) entry.tiers = override.tiers;
     body[pattern] = entry;
   });
   return body;

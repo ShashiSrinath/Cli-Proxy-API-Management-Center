@@ -118,6 +118,8 @@ export interface ModelPriceOverride {
   output?: number;
   cacheRead?: number;
   cacheWrite?: number;
+  /** Time-of-day tiers in config shape; not editable here, kept as-is on save. */
+  tiers?: unknown[];
 }
 
 export interface UsagePricing {

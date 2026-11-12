@@ -384,6 +384,8 @@ export interface OverrideDraft {
   output: string;
   cacheRead: string;
   cacheWrite: string;
+  /** Time-of-day tiers from config, carried through unchanged. */
+  tiers?: unknown[];
 }
 
 export type OverrideIssue =
@@ -429,6 +431,7 @@ export function draftsFromOverrides(
         output: text(override.output),
         cacheRead: text(override.cacheRead),
         cacheWrite: text(override.cacheWrite),
+        ...(override.tiers ? { tiers: override.tiers } : {}),
       };
     });
 }
@@ -462,7 +465,7 @@ export function validateOverrideDrafts(drafts: OverrideDraft[]): OverrideIssue[]
     });
 
     // A bad price already explains the row; reporting it as empty as well would be noise.
-    if (pattern && !hasInvalidPrice && !draft.openrouterId.trim() && !setsPrice) {
+    if (pattern && !hasInvalidPrice && !draft.openrouterId.trim() && !setsPrice && !draft.tiers?.length) {
       issues.push({ draftId: draft.id, code: 'emptyOverride' });
     }
   });
@@ -482,6 +485,7 @@ export function buildOverrideMap(drafts: OverrideDraft[]): Record<string, ModelP
       const parsed = parsePriceInput(draft[field]);
       if (parsed.ok && parsed.value !== undefined) override[field] = parsed.value;
     });
+    if (draft.tiers?.length) override.tiers = draft.tiers;
     overrides[pattern] = override;
   });
   return overrides;
