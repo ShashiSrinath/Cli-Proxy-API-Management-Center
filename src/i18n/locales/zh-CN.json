@@ -2705,6 +2705,17 @@
     "emptyDescription": "智能路由会对属于订阅套餐的凭证进行排序。添加一个套餐即可开始。",
     "unsupportedTitle": "智能路由不可用",
     "unsupportedDescription": "当前服务器尚未提供路由顺序，请更新后端以使用智能路由。",
+    "perKey": {
+      "title": "按 API 密钥",
+      "explainer": "每个客户端 API 密钥可限制只能使用部分提供商。以下是该密钥看到的顺序。",
+      "empty": "尚未配置客户端 API 密钥。",
+      "selectLabel": "API 密钥",
+      "maskedTitle": "已脱敏的客户端 API 密钥",
+      "unrestricted": "无限制 — 遵循完整顺序",
+      "providersLabel": "允许的提供商：",
+      "hidden": "被此密钥的提供商白名单隐藏：{{count}}",
+      "noMatches": "没有套餐凭证使用此密钥允许的提供商。"
+    },
     "rulesTitle": "排序规则",
     "rules": {
       "paused": {

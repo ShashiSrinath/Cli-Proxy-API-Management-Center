@@ -2707,6 +2707,17 @@
     "emptyDescription": "Smart routing ranks the credentials that belong to your subscription plans. Add a plan to get started.",
     "unsupportedTitle": "Smart routing is not available",
     "unsupportedDescription": "This server does not report a routing order yet. Update the backend to use smart routing.",
+    "perKey": {
+      "title": "Per API key",
+      "explainer": "Each client API key can be limited to some providers. This is the order that key sees.",
+      "empty": "No client API keys are configured.",
+      "selectLabel": "API key",
+      "maskedTitle": "Masked client API key",
+      "unrestricted": "Not restricted — follows the full order",
+      "providersLabel": "Allowed providers:",
+      "hidden": "Hidden by this key's provider allow-list: {{count}}",
+      "noMatches": "No plan credential uses a provider this key is allowed to."
+    },
     "rulesTitle": "How the order is decided",
     "rules": {
       "paused": {

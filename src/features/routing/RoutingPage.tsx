@@ -8,11 +8,13 @@ import { DashboardSkeleton } from '@/features/dashboard/components/DashboardSkel
 import { browserTimeZone } from '@/features/dashboard/utils';
 import { RoutingPanel } from '@/features/plans/RoutingPanel';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
+import { useKeyBudgets } from '@/hooks/useKeyBudgets';
 import { apiClient } from '@/services/api/client';
 import { usagePlansApi } from '@/services/api/usagePlans';
 import { useAuthStore } from '@/stores';
 import type { PlansResponse } from '@/types/plans';
 import plansStyles from '@/features/plans/PlansPage.module.scss';
+import { KeyRoutingPanel } from './KeyRoutingPanel';
 import styles from './RoutingPage.module.scss';
 
 const RULE_KEYS = ['paused', 'override', 'weekly', 'reset', 'headroom', 'unplanned'] as const;
@@ -82,6 +84,7 @@ export function RoutingPage() {
 
   const routing = data?.routing ?? null;
   const hasPlans = (data?.plans.length ?? 0) > 0;
+  const { budgets } = useKeyBudgets(connected);
 
   return (
     <div className={plansStyles.page} aria-busy={loading}>
@@ -157,6 +160,7 @@ export function RoutingPage() {
             disabled={!connected}
             onToggle={(enabled) => void toggleSmartRouting(enabled)}
           />
+          {budgets && <KeyRoutingPanel routing={routing} keys={budgets.keys} />}
           <section className={styles.rules} aria-labelledby="routing-rules-title">
             <h2 id="routing-rules-title" className={styles.rulesTitle}>
               {t('routingPage.rulesTitle')}

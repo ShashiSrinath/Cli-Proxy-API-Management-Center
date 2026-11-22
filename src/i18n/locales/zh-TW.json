@@ -2731,6 +2731,17 @@
     "emptyDescription": "智慧路由會對屬於訂閱方案的憑證進行排序。新增一個方案即可開始。",
     "unsupportedTitle": "智慧路由無法使用",
     "unsupportedDescription": "目前伺服器尚未提供路由順序，請更新後端以使用智慧路由。",
+    "perKey": {
+      "title": "依 API 金鑰",
+      "explainer": "每個用戶端 API 金鑰可限制只能使用部分供應商。以下是該金鑰看到的順序。",
+      "empty": "尚未設定用戶端 API 金鑰。",
+      "selectLabel": "API 金鑰",
+      "maskedTitle": "已遮蔽的用戶端 API 金鑰",
+      "unrestricted": "無限制 — 遵循完整順序",
+      "providersLabel": "允許的供應商：",
+      "hidden": "被此金鑰的供應商允許清單隱藏：{{count}}",
+      "noMatches": "沒有方案憑證使用此金鑰允許的供應商。"
+    },
     "rulesTitle": "排序規則",
     "rules": {
       "paused": {
